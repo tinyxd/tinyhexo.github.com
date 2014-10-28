@@ -1,0 +1,467 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>linux工作队列 | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="Linux中的Workqueue机制就是为了简化内核线程的创建。">
+    
+    <meta name="keywords" content="linux,工作队列,内核,kernel">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/07/11/linux-workqueue/" title="linux工作队列" itemprop="url">linux工作队列</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-07-11T15:08:00.000Z" itemprop="datePublished">Jul 11 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#工作队列(workqueue)"><span class="toc-number">1.</span> <span class="toc-text">工作队列(workqueue)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工作队列的数据结构"><span class="toc-number">2.</span> <span class="toc-text">工作队列的数据结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工作队列函数"><span class="toc-number">3.</span> <span class="toc-text">工作队列函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#预定义工作队列"><span class="toc-number">4.</span> <span class="toc-text">预定义工作队列</span></a></li></ol>
+		</div>
+		
+		<h2 id="工作队列(workqueue)">工作队列(workqueue)</h2>
+<p>Linux中的Workqueue机制就是为了简化内核线程的创建。通过调用workqueue的接口就能创建内核线程。并且可以根据当前系统CPU的个数创建线程的数量，使得线程处理的事务能够并行化。 </p>
+<p>workqueue是内核中实现简单而有效的机制，他显然简化了内核daemon的创建，方便了用户的编程， </p>
+<p>尽管可延迟函数和工作队列非常相似，但是它们的区别还是很大的。主要区别在于：可延迟函数运行在中断上下文中，而工作队列中的函数运行在进程上下文中。执行可阻塞函数（例如：需要访问磁盘数据块的函数）的唯一方式是在进程上下文中运行。因为在中断上下文中不可能发生进程切换。可延迟函数和工作队列中的函数都不能访问进程的用户态地址空间。事实上，可延迟函数被执行时不可能有任何正在运行的进程。另一方面，工作队列中的函数是由内核线程来执行的，因此，根本不存在它要访问的用户态地址空间。 </p>
+<h2 id="工作队列的数据结构">工作队列的数据结构</h2>
+<p></p><p style="text-indent:2em">与工作队列相关的主要数据结构有两个：cpu_workqueue_struct和work_struct。名为workqueue_struct的描述符，包括一个有NR_CPUS个元素的数组，NR_CPUS是系统中CPU的最大数量（双核是有两个工作队列）。每个元素都是cpu_workqueue_struct类型的描述符。 </p>
+<p></p><br><a id="more"></a><p></p>
+<p>work_struct结构是对任务的抽象。在该结构中需要维护具体的任务方法，需要处理的数据，以及任务处理的时间。该结构定义如下： </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> work_struct { </div><div class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> pending;                <span class="comment">/*如果函数已经在工作队列链表中，该字段值设为1，否则设为0*/</span> </div><div class="line">        <span class="keyword">struct</span> list_head entry;                  <span class="comment">/* 将任务挂载到queue的挂载点 */</span> </div><div class="line">        <span class="keyword">void</span> (*func)(<span class="keyword">void</span> *);                   <span class="comment">/* 任务方法 */</span> </div><div class="line">        <span class="keyword">void</span> *data;                                  <span class="comment">/* 任务处理的数据*/</span> </div><div class="line">       <span class="keyword">void</span> *wq_data;                           <span class="comment">/* work的属主（通常是指向cpu_workqueue_struct描述符的父结点的指针） */</span> </div><div class="line">       strut timer_list timer;                   <span class="comment">/* 任务延时处理定时器 */</span> </div><div class="line">};</div></pre></td></tr></table></figure>
+
+<h2 id="工作队列函数">工作队列函数</h2>
+<p>当用户调用workqueue的初始化接口create_workqueue或者create_singlethread_workqueue对workqueue队列进行初始化时，内核就开始为用户分配一个workqueue对象，并且将其链到一个全局的workqueue队列中。然后Linux根据当前CPU的情况，为workqueue对象分配与CPU个数相同的cpu_workqueue_struct对象，每个cpu_workqueue_struct对象都会存在一条任务队列。紧接着，Linux为每个cpu_workqueue_struct对象分配一个内核thread，即内核daemon去处理每个队列中的任务。至此，用户调用初始化接口将workqueue初始化完毕，返回workqueue的指针。    </p>
+<p>在初始化workqueue过程中，内核需要初始化内核线程，注册的内核线程工作比较简单，就是不断的扫描对应cpu_workqueue_struct中的任务队列，从中获取一个有效任务，然后执行该任务。所以如果任务队列为空，那么内核daemon就在cpu_workqueue_struct中的等待队列上睡眠，直到有人唤醒daemon去处理任务队列.    </p>
+<p>Workqueue初始化完毕之后，将任务运行的上下文环境构建起来了，但是具体还没有可执行的任务，所以，需要定义具体的work_struct对象。然后将work_struct加入到任务队列中，Linux会唤醒daemon去处理任务。    </p>
+<p>queue_work()（封装在work_struct描述符中）把函数插入工作队列，它接收wq和work两个指针。wq指向workqueue_struct描述符，work指向work_struct描述符。queue_work（）主要执行下面的步骤：    </p>
+<p>1.检查要插入的函数是否已经在工作队列中（work-&gt;pending字段等于1），如果是就结束。 </p>
+<p>2.把work_struct描述符加到工作队列链表中，然后把work-&gt;pending置为1。 </p>
+<p>3.如果工作者线程在本地CPU的cpu_workqueue_struct描述符的more_work等待队列上睡眠，该函数唤醒这个线程。 </p>
+<h2 id="预定义工作队列">预定义工作队列</h2>
+<p>在绝大多数情况下，为了运行一个函数而创建整个工作者线程开销太大了。因此，内核引入叫做events的预定义工作队列，所有的内核开发者都可以随便使用它。预定义工作队列只是一个包含不同内核层函数和IO驱动程序的标准工作队列，它的workququq_struct描述符存放在keventd_wq数组中。 </p>
+<p>工作队列编程接口：   </p>
+<table border="1"><br><tr><br>    <th>序号</th><br>    <th>接口函数</th><br>    <th>函数说明</th><br></tr><br><tr><br>    <td>1</td><br>    <td>create_workqueue</td><br>    <td>用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。输入参数：@name：workqueue的名称</td><br></tr><br><tr><br>    <td>2</td><br>    <td>create_singlethread_workqueue</td><br>    <td>用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。输入参数：@name：workqueue的名称</td><br></tr><br><tr><br>    <td>3</td><br>    <td>destroy_workqueue</td><br>    <td>释放workqueue队列。输入参数：@ workqueue_struct：需要释放的workqueue队列指针</td><br></tr><br><tr><br>    <td>4</td><br>    <td>schedule_work</td><br>    <td>调度执行一个具体的任务，执行的任务将会被挂入Linux系统提供的workqueue——keventd_wq输入参数：@ work_struct：具体任务对象指针<br></td><br></tr><br><tr><br>    <td>5</td><br>    <td>schedule_delayed_work</td><br>    <td>延迟一定时间去执行一个具体的任务，功能与schedule_work类似，多了一个延迟时间，输入参数：@work_struct：具体任务对象指针@delay：延迟时间</td><br></tr><br><tr><br>    <td>6</td><br>    <td>queue_work</td><br>    <td>调度执行一个指定workqueue中的任务。输入参数：@ workqueue_struct：指定的workqueue指针@work_struct：具体任务对象指针</td><br></tr><br><tr><br>    <td>7</td><br>    <td>queue_delayed_work</td><br>    <td>延迟调度执行一个指定workqueue中的任务，功能与queue_work类似，输入参数多了一个delay</td><br></tr><br></table> 
+
+<p>预定义工作队列支持函数:    </p>
+<table><br><tr><br>    <td>预定义工作队列函数</td><br>    <td>等价的标准工作队列函数</td><br></tr><br><tr><br>    <td>schedule_work(w)</td><br>    <td>queue_work( keventd_wq,w)</td><br></tr><br><tr><br>    <td>schedule_delayed_work(w,d)</td><br>    <td>queue_delayed_work(keventd_wq,w,d)在任何CPU上</td><br></tr><br><tr><br>    <td>schedule_delayed_work_on(cpu,w,d)</td><br>    <td>queue_delayed_work(keventd_wq,w,d)（在某个指定的CPU上）</td><br></tr><br><tr><br>    <td>flush_scheduled_work</td><br>    <td>flush_workqueue(keventd_wq)</td><br></tr><br></table>  
+
+<p>除了一般的events队列，在linux2.6中你还会发现一些专用的工作队列。其中最重要的是快设备层使用的kblockd工作队列。 </p>
+<p>本文章整理自网络和《深入理解linux内核》。    </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/kernel/">kernel</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/07/11/linux-workqueue/" data-title="linux工作队列 | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/07/12/python-backup-octopress/" title="本地备份octopress">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  本地备份octopress</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/07/11/soft-interrupt-and-tasklet/"  title="软中断和tasklet">
+ <strong>NEXT:</strong><br/> 
+ <span>软中断和tasklet
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#工作队列(workqueue)"><span class="toc-number">1.</span> <span class="toc-text">工作队列(workqueue)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工作队列的数据结构"><span class="toc-number">2.</span> <span class="toc-text">工作队列的数据结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#工作队列函数"><span class="toc-number">3.</span> <span class="toc-text">工作队列函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#预定义工作队列"><span class="toc-number">4.</span> <span class="toc-text">预定义工作队列</span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

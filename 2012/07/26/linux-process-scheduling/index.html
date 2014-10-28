@@ -1,0 +1,514 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>linux进程调度 | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="linux与任何分时系统一样，通过一个进程到另一个进程的快速切换，达到表面上看来的多个进程同时执行的神奇效果。">
+    
+    <meta name="keywords" content="linux process scheduling,linux进程调度">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/07/26/linux-process-scheduling/" title="linux进程调度" itemprop="url">linux进程调度</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-07-26T15:18:00.000Z" itemprop="datePublished">Jul 26 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#分类_"><span class="toc-number">1.</span> <span class="toc-text">分类 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#进程的抢占_"><span class="toc-number">2.</span> <span class="toc-text">进程的抢占 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#调度算法_"><span class="toc-number">3.</span> <span class="toc-text">调度算法 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#普通进程的调度_(参考自linux进程调度浅析)_"><span class="toc-number">4.</span> <span class="toc-text">普通进程的调度 (参考自linux进程调度浅析) </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实时进程的调度_"><span class="toc-number">5.</span> <span class="toc-text">实时进程的调度 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#调度程序所使用的函数_"><span class="toc-number">6.</span> <span class="toc-text">调度程序所使用的函数 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多处理器系统中运行队列的平衡_"><span class="toc-number">7.</span> <span class="toc-text">多处理器系统中运行队列的平衡 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#与调度相关的系统调用_"><span class="toc-number">8.</span> <span class="toc-text">与调度相关的系统调用 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#与实时进程相关的系统调用_"><span class="toc-number">9.</span> <span class="toc-text">与实时进程相关的系统调用 </span></a></li></ol>
+		</div>
+		
+		<p><strong><em>摘要</em></strong>：linux与任何分时系统一样，通过一个进程到另一个进程的快速切换，达到表面上看来的多个进程同时执行的神奇效果。 </p>
+<p><br><br>Linux的调度基于分时（time sharing）技术：多个进程以“时间多路复用”方式运行，因为CPU的时间被分成“片（slice）”，给每个可运行进程分配一片。 </p>
+<p>在linux中，进程的优先级是动态的。调度程序跟踪进程正在做什么，并周期性地调整它们的优先级。 </p>
+<h2 id="分类_">分类 </h2>
+<p>传统上，把进程分类为“IO受限（IO bound）”或“CPU受限（CPU bound）”。前者频繁使用IO设备，并花费很多时间等待IO操作的完成；而后者则需要大量CPU时间的数值计算应用程序。 </p>
+<p>另一种分类方法把进程区分为三类：交互式进程（interactive process）、批处理进程（batch process、实时进程（real-time process）。<br><a id="more"></a>   </p>
+<h2 id="进程的抢占_">进程的抢占 </h2>
+<p>Linux的进程是抢占式的。根据优先级和时间片是否国企决定是否可以被抢占。 </p>
+<p>Linux2.6内核是抢占式的，这意味着进程无论是处于内核态还是用户态，都可能被抢占。 </p>
+<h2 id="调度算法_">调度算法 </h2>
+<p>调度程序总能成功地找到要执行的进程。事实上，总是至少有一个可运行进程，即swapper进程，它的PID等于0，而且它只有在CPU不能执行其他进程时才执行。 </p>
+<p>每个Linux进程总是按照下面的调度类型被调度： </p>
+<p>SCHED_FIFO（先进先出的实时进程）：直到先被执行的进程变为非可执行状态，后来的进程才被调度执行。在这种策略下，先来的进程可以执行sched_yield系统调用，自愿放弃CPU，以让权给后来的进程； </p>
+<p>SCHED_RR（时间片轮转的实时进程）：轮转调度。内核为实时进程分配时间片，在时间片用完时，让下一个进程使用CPU； </p>
+<p>SCHED_NORMAL（普通的分时进程）。 </p>
+<h2 id="普通进程的调度_(参考自linux进程调度浅析)_">普通进程的调度 (参考自<a href="http://hi.baidu.com/_kouu/blog/item/52471ab5e90e7c788ad4b24a.html" target="_blank" rel="external">linux进程调度浅析</a>) </h2>
+<p>实时进程调度的中心思想是，让处于可执行状态的最高优先级的实时进程尽可能地占有CPU，因为它有实时需求；而普通进程则被认为是没有实时需求的进程，于是调度程序力图让各个处于可执行状态的普通进程和平共处地分享CPU，从而让用户觉得这些进程是同时运行的。 </p>
+<p>每个普通进程都有它自己的静态优先级，还有动态优先级。 </p>
+<p>与实时进程相比，普通进程的调度要复杂得多。内核需要考虑两件麻烦事： </p>
+<p>一、动态调整进程的优先级 </p>
+<p>按进程的行为特征，可以将进程分为“交互式进程”和“批处理进程”： </p>
+<p>交互式进程（如桌面程序、服务器、等）主要的任务是与外界交互。这样的进程应该具有较高的优先级，它们总是睡眠等待外界的输入。而在输入到来，内核将其唤醒时，它们又应该很快被调度执行，以做出响应。比如一个桌面程序，如果鼠标点击后半秒种还没反应，用户就会感觉系统“卡”了； </p>
+<p>批处理进程（如编译程序）主要的任务是做持续的运算，因而它们会持续处于可执行状态。这样的进程一般不需要高优先级，比如编译程序多运行了几秒种，用户多半不会太在意； </p>
+<p>如果用户能够明确知道进程应该有怎样的优先级，可以通过nice、setpriority系统调用来对优先级进行设置。（如果要提高进程的优先级，要求用户进程具有CAP_SYS_NICE能力。） </p>
+<p>然而应用程序未必就像桌面程序、编译程序这样典型。程序的行为可能五花八门，可能一会儿像交互式进程，一会儿又像批处理进程。以致于用户难以给它设置一个合适的优先级。 </p>
+<p>再者，即使用户明确知道一个进程是交互式还是批处理，也多半碍于权限或因为偷懒而不去设置进程的优先级。（你又是否为某个程序设置过优先级呢？） </p>
+<p>于是，最终，区分交互式进程和批处理进程的重任就落到了内核的调度程序上。 </p>
+<p>调度程序关注进程近一段时间内的表现（主要是检查其睡眠时间和运行时间），根据一些经验性的公式，判断它现在是交互式的还是批处理的？程度如何？最后决定给它的优先级做一定的调整。 </p>
+<p>进程的优先级被动态调整后，就出现了两个优先级： </p>
+<p>1、用户程序设置的优先级（如果未设置，则使用默认值），称为静态优先级。这是进程优先级的基准，在进程执行的过程中往往是不改变的； </p>
+<p>2、优先级动态调整后，实际生效的优先级。这个值是可能时时刻刻都在变化的； </p>
+<p>二、调度的公平性 </p>
+<p>在支持多进程的系统中，理想情况下，各个进程应该是根据其优先级公平地占有CPU。而不会出现“谁运气好谁占得多”这样的不可控的情况。 </p>
+<p>linux实现公平调度基本上是两种思路： </p>
+<p>1、给处于可执行状态的进程分配时间片（按照优先级），用完时间片的进程被放到“过期队列”中。等可执行状态的进程都过期了，再重新分配时间片； </p>
+<p>2、动态调整进程的优先级。随着进程在CPU上运行，其优先级被不断调低，以便其他优先级较低的进程得到运行机会； </p>
+<p>后一种方式有更小的调度粒度，并且将“公平性”与“动态调整优先级”两件事情合而为一，大大简化了内核调度程序的代码。因此，这种方式也成为内核调度程序的新宠。 </p>
+<p>强调一下，以上两点都是仅针对普通进程的。而对于实时进程，内核既不能自作多情地去动态调整优先级，也没有什么公平性可言。 </p>
+<p>普通进程具体的调度算法非常复杂，并且随linux内核版本的演变也在不断更替（不仅仅是简单的调整），所以本文就不继续深入了。有兴趣的朋友可以参考下面的链接： </p>
+<p><a href="http://www.ibm.com/developerworks/cn/linux/l-cn-scheduler/" target="_blank" rel="external">《Linux 调度器发展简述》</a> </p>
+<p><a href="http://blog.chinaunix.net/u1/42957/showart.php?id=337597" target="_blank" rel="external">《鼠眼看Linux调度器》</a> </p>
+<p><a href="http://blog.chinaunix.net/u1/42957/showart.php?id=337604" target="_blank" rel="external">《鼠眼再看Linux调度器［1］》</a> </p>
+<p><a href="http://blog.chinaunix.net/u1/42957/showart.php?id=337607" target="_blank" rel="external">《鼠眼再看Linux调度器［2］》</a> </p>
+<h2 id="实时进程的调度_">实时进程的调度 </h2>
+<p>每个实时进程都与一个实时优先级相关，实时优先级是一个范围从1（最高优先级）~99（最低优先级）的值。调度程序总是让优先级高的进程运行，换句话说，实时进程运行的过程中，禁止低优先级的进程的执行。与普通进程相反，实时进程总是被当成活动进程。用户可以通过系统调用sched_setparam()和sched_setscheduler()改变进程的实时优先级。 </p>
+<p>只有在下述时间之一发生时，实时进程才会被另一个进程取代： </p>
+<pre><code>进程被另外一个具有更高实时优先级的实时进程抢占 
+
+进程执行了阻塞操作并进入睡眠（处于TASK_INTERRUPTIBLE或TASK_UNINTERRUPTIBLE状态）。 
+
+进程停止（处于TASK_STOPPED或TASK_TRACED状态）或被杀死（处于EXIT_ZOMBIE或EXIT_DEAD状态）。 
+
+进程通过调用系统调用sched_yield()自愿放弃<span class="built_in">CPU</span>。 
+
+进程是基于时间片轮转的实时进程（SCHED_RR），而且用完了它的时间片。 
+</code></pre><p>数据结构runqueue是Linux2.6调度程序最重要的数据结构。系统中的每个CPU都有它自己的运行队列，所有的runqueue结构存放在runqueues每CPU变量中。 </p>
+<h2 id="调度程序所使用的函数_">调度程序所使用的函数 </h2>
+<p>scheduler_tick()：维持当前最新的time_slice计数器 </p>
+<p>try_to_wake_up()：唤醒睡眠进程 </p>
+<p>recalc_task_prio()：更新进程的动态优先级 </p>
+<p>schedule()：选择要被执行的新进程 </p>
+<p>load_balance()：维持多处理器系统中运行队列的平衡 </p>
+<h2 id="多处理器系统中运行队列的平衡_">多处理器系统中运行队列的平衡 </h2>
+<p>Linux一直坚持采用对称多处理模式，这意味着，与其他CPU相比，内核不对一个CPU有任何偏向，但是，多处理器机器具有很多不同的风格，而且调度程序的实现随硬件特征的不同而有所不同，我们将特别关注下面三种不同类型的多处理器机器： </p>
+<p>（1）标准的多处理器体系结构 </p>
+<p>直到最近，这是多处理器机器最普通的体系结构。这些机器所共有的RAM芯片集被所有CPU共享。 </p>
+<p>（2）超线程 </p>
+<p>超线程芯片是一个立刻执行几个执行线程的微处理器；它包括几个内部寄存器的拷贝，并快速在它们之间切换。这种由Intel发明的技术，使得当前线程在访问内存的间隙，处理器可以使用它的机器周期去执行另外一个线程。一个超线程的物理CPU可以被Linux看作几个不同的逻辑CPU。 </p>
+<p>（3）NUMA </p>
+<p>把CPU和RAM以本地“结点”为单位分组，（通常一个结点包括一个CPU和几个RAM芯片）。内存仲裁器（一个使系统中的CPU以串型方式访问RAM的专用电路）是典型的多处理器系统的瓶颈。在NUMA体系结构中，当CPU访问与它同在一个结点中的“本地”RAM芯片时，几乎没有竞争，因此访问通常是非常快的。另一方面，访问它所属结点外的“远程”RAM芯片就非常慢。 </p>
+<h2 id="与调度相关的系统调用_">与调度相关的系统调用 </h2>
+<p>nice()、getpriority()和setpriority()系统调用、sched_getaffinity()和sched_setaffinity()调用 </p>
+<h2 id="与实时进程相关的系统调用_">与实时进程相关的系统调用 </h2>
+<p>sched_getscheduler()和sched_setscheduler()系统调用、sched_getparam()和sched_setparam()系统调用、sched_yield()系统调用、sched_get_priority_min()和 sched_get_priority_max()系统调用、sched_rr_get_interval()系统调用 </p>
+<p><br><br>本文章参考自《深入理解linux内核》。   </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/kernel/">kernel</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/07/26/linux-process-scheduling/" data-title="linux进程调度 | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/07/29/linux-memory-management-1/" title="linux内存管理（上）">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  linux内存管理（上）</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/07/26/linux-timing-measurements/"  title="linux系统定时测量">
+ <strong>NEXT:</strong><br/> 
+ <span>linux系统定时测量
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#分类_"><span class="toc-number">1.</span> <span class="toc-text">分类 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#进程的抢占_"><span class="toc-number">2.</span> <span class="toc-text">进程的抢占 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#调度算法_"><span class="toc-number">3.</span> <span class="toc-text">调度算法 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#普通进程的调度_(参考自linux进程调度浅析)_"><span class="toc-number">4.</span> <span class="toc-text">普通进程的调度 (参考自linux进程调度浅析) </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实时进程的调度_"><span class="toc-number">5.</span> <span class="toc-text">实时进程的调度 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#调度程序所使用的函数_"><span class="toc-number">6.</span> <span class="toc-text">调度程序所使用的函数 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多处理器系统中运行队列的平衡_"><span class="toc-number">7.</span> <span class="toc-text">多处理器系统中运行队列的平衡 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#与调度相关的系统调用_"><span class="toc-number">8.</span> <span class="toc-text">与调度相关的系统调用 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#与实时进程相关的系统调用_"><span class="toc-number">9.</span> <span class="toc-text">与实时进程相关的系统调用 </span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

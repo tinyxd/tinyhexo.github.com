@@ -1,0 +1,504 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>linux内存管理（中） | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="本文介绍了slab分配器。slab分配器是Linux内存管理中非常重要和复杂的一部分。">
+    
+    <meta name="keywords" content="linux,kernel,内核,内存管理,slab,buddy,伙伴算法">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/07/31/linux-memory-management-2/" title="linux内存管理（中）" itemprop="url">linux内存管理（中）</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-07-31T15:16:00.000Z" itemprop="datePublished">Jul 31 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API_函数_"><span class="toc-number">2.</span> <span class="toc-text">API 函数 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其他函数_"><span class="toc-number">3.</span> <span class="toc-text">其他函数 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#补充：_"><span class="toc-number">4.</span> <span class="toc-text">补充： </span></a></li></ol>
+		</div>
+		
+		<p><strong><em>摘要</em></strong>：slab分配器是Linux内存管理中非常重要和复杂的一部分，其工作是针对一些经常分配并释放的对象，如进程描述符等，这些对象的大小一般比较小，如果直接采用伙伴系统来进行分配和释放，不仅会造成大量的内碎片，而且处理速度也太慢。而slab分配器是基于对象进行管理的，相同类型的对象归为一类(如进程描述符就是一类)，每当要申请这样一个对象，slab分配器就从一个slab列表中分配一个这样大小的单元出去，而当要释放时，将其重新保存在该列表中，而不是直接返回给伙伴系统。slab分配对象时，会使用最近释放的对象内存块，因此其驻留在CPU高速缓存的概率较高。 </p>
+<h2 id="简介">简介</h2>
+<p><a id="more"></a><br>内存管理的目标是提供一种方法，为实现各种目的而在各个用户之间实现内存共享。内存管理方法应该实现以下两个功能： </p>
+<ul>
+<li><p>最小化管理内存所需的时间 </p>
+</li>
+<li><p>最大化用于一般应用的可用内存（最小化管理开销） </p>
+</li>
+</ul>
+<p>内存管理实际上是一种关于权衡的零和游戏。您可以开发一种使用少量内存进行管理的算法，但是要花费更多时间来管理可用内存。也可以开发一个算法来有效地管理内存，但却要使用更多的内存。最终，特定应用程序的需求将促使对这种权衡作出选择。 </p>
+<p>每个内存管理器都使用了一种基于堆的分配策略。在这种方法中，大块内存（称为 堆）用来为用户定义的目的提供内存。当用户需要一块内存时，就请求给自己分配一定大小的内存。堆管理器会查看可用内存的情况（使用特定算法）并返回一块内存。搜索过程中使用的一些算法有 first-fit（在堆中搜索到的第一个满足请求的内存块 ）和 best-fit（使用堆中满足请求的最合适的内存块）。当用户使用完内存后，就将内存返回给堆。 </p>
+<p>这种基于堆的分配策略的根本问题是碎片（fragmentation）。当内存块被分配后，它们会以不同的顺序在不同的时间返回。这样会在堆中留下一些洞，需要花一些时间才能有效地管理空闲内存。这种算法通常具有较高的内存使用效率（分配需要的内存），但是却需要花费更多时间来对堆进行管理。 </p>
+<p>另外一种方法称为 buddy memory allocation，是一种更快的内存分配技术，它将内存划分为 2 的幂次方个分区，并使用 best-fit 方法来分配内存请求。当用户释放内存时，就会检查 buddy 块，查看其相邻的内存块是否也已经被释放。如果是的话，将合并内存块以最小化内存碎片。这个算法的时间效率更高，但是由于使用 best-fit 方法的缘故，会产生内存浪费。 </p>
+<p>伙伴系统算法采用页框作为基本内存区，适合对大块内存的请求，为了解决外碎片的问题。而小内存的分配，会产生内碎片（internal fragmentation），这需要新的数据结构来描述在同一页框中 如何分配小内存区。 </p>
+<p>为了满足内核对这种小内存块的需要，Linux系统采用了一种被称为slab分配器的技术。Slab分配器的实现相当复杂，但原理不难，其核心思想就是“存储池[2]”的运用。内存片段（小块内存）被看作对象，当被使用完后，并不直接释放而是被缓存到“存储池”里，留做下次使用，这无疑避免了频繁创建与销毁对象所带来的额外负载。 </p>
+<p>Slab技术不但避免了内存内部分片（下文将解释）带来的不便（引入Slab分配器的主要目的是为了减少对伙伴系统分配算法的调用次数——频繁分配和回收必然会导致内存碎片——难以找到大块连续的可用内存），而且可以很好利用硬件缓存提高访问速度。 </p>
+<p>Slab并非是脱离伙伴关系而独立存在的一种内存分配方式，slab仍然是建立在页面基础之上，换句话说，Slab将页面（来自于伙伴关系管理的空闲页框链）撕碎成众多小内存块以供分配，slab中的对象分配和销毁使用kmem_cache_alloc与kmem_cache_free。每个高速缓存都是由kmem_cache_t(等价于struct kmem_cache) </p>
+<p>slab分配器把对象分组放进高速缓存。包含高速缓存的主内存区被划分为多个slab，每个slab由一个或多个连续的页框组成，这些页框既包含已分配的对象，也包含空闲的对象。内核周期性地扫描高速缓存并释放空slab对应的页框。 </p>
+<p>普通高速缓存在系统初始化期间调用kmem_cache_init()和kmem_cache_sizes_init()来建立普通高速缓存。专用高速缓存由kmem_cache_create()函数创建。所有普通和专用高速缓存的名字都可以在运行期间通过读取/proc/slabinfo文件得到。这个文件也指明每个高速缓存中空闲对象的个数和已分配对象的个数。 </p>
+<p>slab的对象描述符与slab描述符本身类似，也可以用两种可能的方式来存放：外部对象描述符（存放在slab的外部）、内部对象描述符（存放在slab的内部）。每个对象都有类型为kmem_bufctl_t的一个描述符。 </p>
+<h2 id="API_函数_">API 函数 </h2>
+<p>现在来看一下能够创建新 slab 缓存、向缓存中增加内存、销毁缓存的应用程序接口（API）以及 slab 中对对象进行分配和释放操作的函数。 </p>
+<p>第一个步骤是创建 slab 缓存结构，您可以将其静态创建为： </p>
+<p>struct struct kmem_cache *my_cachep;  </p>
+<p>然后其他 slab 缓存函数将使用该引用进行创建、删除、分配等操作。kmem_cache 结构包含了每个中央处理器单元（CPU）的数据、一组可调整的（可以通过 proc 文件系统访问）参数、统计信息和管理 slab 缓存所必须的元素。 </p>
+<p>kmem_cache_create </p>
+<p>内核函数 kmem_cache_create 用来创建一个新缓存。这通常是在内核初始化时执行的，或者在首次加载内核模块时执行。其原型定义如下： </p>
+<p>struct kmem_cache <em> kmem_cache_create( const char </em>name, size_t size, size_t align,                        unsigned long flags;                        void (<em>ctor)(void</em>, struct kmem_cache <em>, unsigned long),                        void (</em>dtor)(void<em>, struct kmem_cache </em>, unsigned long));  </p>
+<p>name 参数定义了缓存名称，proc 文件系统（在 /proc/slabinfo 中）使用它标识这个缓存。 size 参数指定了为这个缓存创建的对象的大小， align 参数定义了每个对象必需的对齐。 flags 参数指定了为缓存启用的选项。这些标志如表 1 所示。 </p>
+<p>表 1. kmem_cache_create 的部分选项（在 flags 参数中指定） </p>
+<p>选项                  说明 </p>
+<p>SLAB_RED_ZONE      在对象头、尾插入标志，用来支持对缓冲区溢出的检查。 </p>
+<p>SLAB_POISON            使用一种己知模式填充 slab，允许对缓存中的对象进行监视（对象属对象所有，不过可以在外部进行修改）。 </p>
+<p>SLAB_HWCACHE_ALIGN             指定缓存对象必须与硬件缓存行对齐。 </p>
+<p>ctor 和 dtor 参数定义了一个可选的对象构造器和析构器。构造器和析构器是用户提供的回调函数。当从缓存中分配新对象时，可以通过构造器进行初始化。 </p>
+<p>在创建缓存之后， kmem_cache_create 函数会返回对它的引用。注意这个函数并没有向缓存分配任何内存。相反，在试图从缓存（最初为空）分配对象时，refill 操作将内存分配给它。当所有对象都被使用掉时，也可以通过相同的操作向缓存添加内存。 </p>
+<p>kmem_cache_destroy </p>
+<p>内核函数 kmem_cache_destroy 用来销毁缓存。这个调用是由内核模块在被卸载时执行的。在调用这个函数时，缓存必须为空。 </p>
+<p>void kmem_cache_destroy( struct kmem_cache *cachep );  </p>
+<p>kmem_cache_alloc </p>
+<p>要从一个命名的缓存中分配一个对象，可以使用 kmem_cache_alloc 函数。调用者提供了从中分配对象的缓存以及一组标志： </p>
+<p>void kmem_cache_alloc( struct kmem_cache *cachep, gfp_t flags );  </p>
+<p>这个函数从缓存中返回一个对象。注意如果缓存目前为空，那么这个函数就会调用 cache_alloc_refill 向缓存中增加内存。kmem_cache_alloc 的 flags 选项与 kmalloc 的 flags 选项相同。表 2 给出了标志选项的部分列表。 </p>
+<p>表 2. kmem_cache_alloc 和 kmalloc 内核函数的标志选项 </p>
+<p>标志    说明 </p>
+<p>GFP_USER 为用户分配内存（这个调用可能会睡眠）。 </p>
+<p>GFP_KERNEL       从内核 RAM 中分配内存（这个调用可能会睡眠）。 </p>
+<p>GFP_ATOMIC         使该调用强制处于非睡眠状态（对中断处理程序非常有用）。 </p>
+<p>GFP_HIGHUSER       从高端内存中分配内存。 </p>
+<p>kmem_cache_zalloc </p>
+<p>内核函数 kmem_cache_zalloc 与 kmem_cache_alloc 类似，只不过它对对象执行 memset 操作，用来在将对象返回调用者之前对其进行清除操作。 </p>
+<p>kmem_cache_free </p>
+<p>要将一个对象释放回 slab，可以使用 kmem_cache_free。调用者提供了缓存引用和要释放的对象。 </p>
+<p>void kmem_cache_free( struct kmem_cache <em>cachep, void </em>objp );  </p>
+<p>kmalloc 和 kfree </p>
+<p>内核中最常用的内存管理函数是 kmalloc 和 kfree 函数。这两个函数的原型如下： </p>
+<p>void <em>kmalloc( size_t size, int flags ); void kfree( const void </em>objp );  </p>
+<p>注意在 kmalloc 中，惟一两个参数是要分配的对象的大小和一组标志（请参看 表 2 中的部分列表）。但是 kmalloc 和 kfree 使用了类似于前面定义的函数的 slab 缓存。kmalloc 没有为要从中分配对象的某个 slab 缓存命名，而是循环遍历可用缓存来查找可以满足大小限制的缓存。找到之后，就（使用 <code>__kmem_cache_alloc</code>）分配一个对象。要使用 kfree 释放对象，从中分配对象的缓存可以通过调用 virt_to_cache 确定。这个函数会返回一个缓存引用，然后在 __cache_free 调用中使用该引用释放对象。 </p>
+<h2 id="其他函数_">其他函数 </h2>
+<p>slab 缓存 API 还提供了其他一些非常有用的函数。 kmem_cache_size 函数会返回这个缓存所管理的对象的大小。您也可以通过调用kmem_cache_name 来检索给定缓存的名称（在创建缓存时定义）。缓存可以通过释放其中的空闲 slab 进行收缩。这可以通过调用kmem_cache_shrink 实现。注意这个操作（称为回收）是由内核定期自动执行的（通过 kswapd）。 </p>
+<p>unsigned int kmem_cache_size( struct kmem_cache <em>cachep ); const char </em>kmem_cache_name( struct kmem_cache <em>cachep ); int kmem_cache_shrink( struct kmem_cache </em>cachep ); </p>
+<h2 id="补充：_">补充： </h2>
+<p>如果对存储区的请求不频繁，就用一组普通高速缓存来处理，普通高速缓存中的对象具有几何分布的大小，范围为32~131072字节。 </p>
+<p>使用kmalloc()函数申请，kfree()释放。   </p>
+<p><br><br>本文章参考自《深入理解linux内核》及 <a href="https://www.ibm.com/developerworks/cn/linux/l-linux-slab-allocator/" target="_blank" rel="external">动态内存管理</a>。   </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/kernel/">kernel</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/07/31/linux-memory-management-2/" data-title="linux内存管理（中） | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/07/31/linux-memory-management-3/" title="linux内存管理（下）">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  linux内存管理（下）</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/07/29/linux-memory-management-1/"  title="linux内存管理（上）">
+ <strong>NEXT:</strong><br/> 
+ <span>linux内存管理（上）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简介"><span class="toc-number">1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API_函数_"><span class="toc-number">2.</span> <span class="toc-text">API 函数 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#其他函数_"><span class="toc-number">3.</span> <span class="toc-text">其他函数 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#补充：_"><span class="toc-number">4.</span> <span class="toc-text">补充： </span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

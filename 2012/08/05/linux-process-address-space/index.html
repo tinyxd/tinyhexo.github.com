@@ -1,0 +1,472 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>linux进程地址空间 | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="本文介绍了linux进程地址空间的相关知识。">
+    
+    <meta name="keywords" content="进程地址空间,linux,kernel,内核">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/08/05/linux-process-address-space/" title="linux进程地址空间" itemprop="url">linux进程地址空间</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-08-05T04:51:00.000Z" itemprop="datePublished">Aug 5 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简介_"><span class="toc-number">1.</span> <span class="toc-text">简介   </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存描述符_"><span class="toc-number">2.</span> <span class="toc-text">内存描述符 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内核线程的内存描述符_"><span class="toc-number">3.</span> <span class="toc-text">内核线程的内存描述符 </span></a></li></ol>
+		</div>
+		
+		<h2 id="简介_">简介   </h2>
+<p>内核中获得动态内存的方式：<code>__get_free_pages()</code>或alloc_pages()从分区页框分配器中获得页框，kmem_cache_alloc()或kmalloc()使用slab分配器为专用或通用对象分配块，vmalloc()或vmalloc_32()获得一块非连续的内存区。如果所请求的内存区得以满足，这些函数都返回一个页描述符地址或线性地址（即所分配动态内存区的起始地址）。 </p>
+<p>使用以上简单方法的原因： </p>
+<pre><code>内核是操作系统中优先级最高的成分 
+
+内核信任自己。 
+</code></pre><p><a id="more"></a><br>当给用户态进程分配内存时： </p>
+<pre><code>进程对动态内存的请求被认为是不紧迫的，内核总是尽量推迟给用户态进程分配动态内存。 
+
+由于用户进程是不可信任的，因此 ，内核必须能随时准备捕获用户态进程引起的所有寻址错误。 
+</code></pre><p>进程的地址空间（address space）由允许进程使用的全部线性地址组成。每个进程所看到的线性地址集合是不同的，一个进程所使用的地址与另外一个进程所使用的地址之间没有什么关系。后面我们会看到，内核可以通过增加或删除某些线性地址区间来动态修改进程的地址空间。 </p>
+<p>内核通过所谓线性区的资源来表示线性地址区间，线性区是由起始线性地址、长度和一些访问权限来描述的。为了效率起见，起始地址和线性区的长度都必须是4096的倍数，以便每个线性区所识别的数据完全填满分配给它的页框。 </p>
+<p>我们会在“缺页异常处理程序”博文中看到，确定一个进程当前所拥有的线性区（即进程的地址空间）是内核的基本任务，因为这可以让缺页异常处理程序有效地区分引发这个异常处理程序的两种不同类型的无效线性地址： </p>
+<ul>
+<li><p>由编程错误引发的无效线性地址。 </p>
+</li>
+<li><p>由缺页引发的无效线性地址；即使这个线性地址属于进程的地址空间，但是对应于这个地址的页框仍然有待分配。 </p>
+</li>
+</ul>
+<p>从进程的观点来看，后一种地址不是无效的，内核要利用这种缺页以实现请求调页：内核通过提供页框来处理这种缺页，并让进程继续执行。 </p>
+<h2 id="内存描述符_">内存描述符 </h2>
+<p>与进程地址空间有关的全部信息都包含在一个叫做内存描述符（memory descriptor）的数据结构中，这个结构的类型为mm_struct，进程描述符的mm字段就指向这个结构。 </p>
+<p>所有的内存描述符存放在一个双向链表中。每个描述符在mmlist段存放链表相邻元素的地址。链表的第一个元素是init_mm的mmlist字段，init_mm是初始化阶段进程0所使用的内存描述符。mmlist_lock自旋锁保护多处理器系统对链表的同时访问（同样是位于include/linux/Sched.h）： </p>
+<p>extern spinlock_t mmlist_lock; </p>
+<p>mm_users字段存放共享mm_struct数据结构的轻进程的个数。mm_count字段是内存描述符的主是使用计数器，在mm_users次使用计数器中的所有用户在mm_count中只作为一个单位。每当mm_count递减时，内核都要检查它是否变为0，如果是，就要解除这个内存描述符，因为不再有用户使用它。 </p>
+<p>我们用一个例子来解释mm_users和mm_count之间的不同。如果一个内存描述符由两个轻量级进程共享。它的mm_users字段通常存放的值为2，而mm_count字段存放的值为1（两个所有者进程算作一个）。 </p>
+<p>如果把内存描述符暂时借给一个内核线程，那么，内核就增加mm_count。这样，即使两个轻量级进程都死亡，且mm_users字段变为0，这个内存描述符也不被释放，直到内核线程使用完为止，因为mm_count字段仍然大于0。 </p>
+<p>但是，如果内核想确保内存描述符在一个长操作的中间不被释放，那么，就应该增加mm_users字段而不是mm_coont字段的值。最终的结果是相同的，因为mm_users的增加确保了mm_count不变为0，即使拥有这个内存描述符的所有轻进程全部死亡。 </p>
+<h2 id="内核线程的内存描述符_">内核线程的内存描述符 </h2>
+<p>内核线程仅运行在内核态，因此，它们永远不会访问低于TASK_SIZE（等于PAGE_OFFSET，通常为0xc0000000，即768MB)的地址。与普通进程相反，内核线程不用线性区（vm_area_struct），因此，内存描述符的很多字段对内核线程是没有意义的。 </p>
+<p>因为大于TASK_SIZE线性地址的相应页表项都应该总是相同的，因此，一个内核线程到底使用什么样的页表集根本就没有什么关系。为了避免无用的TLB和高速缓存刷新，内核线程使用一组最近运行的普通进程的页表。所以，我们在每个进程描述符中包含了两种内存描述符的指针：mm和active_mm。 </p>
+<p>进程描述符中的mm字段指向进程所拥有的内存描述符，而active_mm字段指向进程运行时所使用的内存描述符。对于普通进程而言，这两个字段存放相同的指针。但是，内核线程不拥有任何内存描述符，因此，它们的mm字段总是为NULL。当内核线程得以运行时，他的active_mm字段被初始化为前一个运行进程的active_mm值。</p>
+<p><br><br>本文章参考自《深入理解linux内核》 。   </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/kernel/">kernel</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/08/05/linux-process-address-space/" data-title="linux进程地址空间 | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/08/07/linux-linear-regions/" title="linux线性区">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  linux线性区</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/08/02/blog-two-months/"  title="写在开博两个月">
+ <strong>NEXT:</strong><br/> 
+ <span>写在开博两个月
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简介_"><span class="toc-number">1.</span> <span class="toc-text">简介   </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内存描述符_"><span class="toc-number">2.</span> <span class="toc-text">内存描述符 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#内核线程的内存描述符_"><span class="toc-number">3.</span> <span class="toc-text">内核线程的内存描述符 </span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

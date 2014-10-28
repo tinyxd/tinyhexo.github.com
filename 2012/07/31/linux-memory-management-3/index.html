@@ -1,0 +1,481 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>linux内存管理（下） | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="本文介绍了非连续内存区管理（Noncontiguous Memory Area Management）。">
+    
+    <meta name="keywords" content="linux,kernel,内核,内存管理,非连续内存区">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/07/31/linux-memory-management-3/" title="linux内存管理（下）" itemprop="url">linux内存管理（下）</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-07-31T15:51:00.000Z" itemprop="datePublished">Jul 31 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#非连续内存区的线性地址_"><span class="toc-number">1.</span> <span class="toc-text">非连续内存区的线性地址    </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#非连续内存区的描述符_"><span class="toc-number">2.</span> <span class="toc-text">非连续内存区的描述符 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分配非连续内存区_"><span class="toc-number">3.</span> <span class="toc-text">分配非连续内存区 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#释放函数_"><span class="toc-number">4.</span> <span class="toc-text">释放函数   </span></a></li></ol>
+		</div>
+		
+		<p><strong><em>摘要</em></strong>：把一块存放slab结构的内存区映射到一组连续的页框是最好的选择，这样会充分利用高速缓存并获得较低的平均访问时间。不过，上面的方式主要是针对那些使用非常频繁的内核数据结构——如task_struct、inode来设计的。如果对内存区的请求不是很频繁，那么，通过连续的线性地址，而不是物理地址来访问非连续的物理页框这样一种分配模式就会很有意义了。这种模式的主要优点是避免了外碎片，而缺点是必须打乱内核页表。此外，非连续内存区的大小必须是4096 的倍数。Linux 在几个方面使用非连续内存区：为活动的交换区分配数据结构，为模块分配空间，或者给某些I/O 驱动程序分配缓冲区等。此外，非连续内存区还提供了另一种使用高端内存页框的方法。 </p>
+<h2 id="非连续内存区的线性地址_">非连续内存区的线性地址    </h2>
+<p>要查找线性地址的一个空闲区，我们可以从PAGE_OFFSET开始查找（通常为0xc0000000，即第4 个GB 的起始地址）。下图让我们回忆了如何使用第4个GB 的线性地址：<br><a id="more"></a><br>回忆一下：    </p>
+<iframe src="https://skydrive.live.com/embed?cid=1F260DE1061FCF3E&resid=1F260DE1061FCF3E%21156&authkey=ABbb5MTrh96mmAU" width="317" height="94" frameborder="0" scrolling="no"></iframe>
+
+
+<p>（1）内存区的开始部分包含的是对前896MB RAM 进行映射的线性地址。直接映射的物理内存末尾所对应的线性地址保存在high_memory全局变量中。当物理内存小于896MB，则线性地址0xc0000000以后的896MB与其一一对应；当物理内存大于896MB而小于4GB时，只直接映射前896MB的地址到0xc0000000以后的线性空间，然后把线性空间的其他部分与896MB和4GB物理空间映射起来，称为动态重映射，这是本博的重点；当物理内存大于4GB，则需要考虑PAE的情况，其他的东东没什么区别，我们不做过多的回忆了。 </p>
+<p>（2）内核的页表由内核页全局目录变量swapper_pg_dir维护；pagetable_init()建立内核页表项。 </p>
+<p>（3）内存区的结尾部分包含的是固定映射的线性地址，主要用于存放一些常量线性地址，具体查看“高端内存映射”博文。 </p>
+<p>（4）从PKMAP_BASE 开始，我们查找用于高端内存页框的永久内核映射的线性地址，具体查看“高端内存映射 ”博文。 </p>
+<p>（5）其余的线性地址可以用于非连续内存区。在物理内存映射的末尾与第一个内存区之间插入一个大小为8MB（宏VMALLOC_OFFSET）的安全区，目的是为了“捕获”对内存的越界访问。出于同样的理由，插入其他4KB 大小的安全区来隔离非连续的内存区。 </p>
+<h2 id="非连续内存区的描述符_">非连续内存区的描述符 </h2>
+<p>每个非连续内存区都对应着一个类型为vm_struct 的描述符： </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> vm_struct { </div><div class="line"></div><div class="line">    <span class="keyword">void</span>            *addr; </div><div class="line"></div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span>        size; </div><div class="line"></div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span>        flags; </div><div class="line"></div><div class="line">    <span class="keyword">struct</span> page        **pages; </div><div class="line"></div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>        nr_pages; </div><div class="line"></div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span>        phys_addr; </div><div class="line"></div><div class="line">    <span class="keyword">struct</span> vm_struct    *next; </div><div class="line"></div><div class="line">};</div></pre></td></tr></table></figure>
+
+
+
+<p>介绍下它的字段： </p>
+<p>void *    addr    内存区内第一个内存单元的线性地址（首址） </p>
+<p>unsigned long    size    内存区的大小加4096（内存区之间的安全区间的大小） </p>
+<p>unsigned long    flags    非连续内存区映射的内存的类型 </p>
+<p>struct page **    pages    指向nr_pages数组的指针，该数组由指向页描述符的指针组成 </p>
+<p>unsigned int    nr_pages    内存区填充的页的个数 </p>
+<p>unsigned long    phys_addr    该字段设为0，除非内存已被创建来映射一个硬件设备的I/O 共享内存 </p>
+<p>struct vm_struct *    next    指向下一个vm_struct结构的指针 </p>
+<h2 id="分配非连续内存区_">分配非连续内存区 </h2>
+<p>vmalloc()函数给内核分配一个非连续内存区。参数size表示所请求内存区的大小。如果这个函数能够满足请求，就返回新内存区的起始地址；否则，返回一个NULL 指针（mm/ vmalloc.c） </p>
+<p>其工作方式类似于kmalloc()，只不过vmalloc()分配的内存虚拟地址是连续的，而物理地址则无需连续。这也是用户空间分配函数的工作方式：由malloc()返回的页在进程的虚拟地址空间内是连续的，但是，这并不保证它们在物理RAM中也连续。kmalloc()函数确保页在物理地址上是连续的（虚拟地址自然也是连续的）。vmalloc()函数只确保页在虚拟地址空间内是连续的。vmalloc()仅在不得已时才会使用——一般是在为了获得大块内存时，例如，当模块被动态插入到内核中时，就把模块装载到由vmalloc()分配的内存上。 </p>
+<p>伙伴关系也好、slab技术也好，从内存管理理论角度而言目的基本是一致的，它们都是为了防止“分片”，不过分片又分为外部分片和内部分片之说，所谓内部分片是说系统为了满足一小段内存区（连续）的需要，不得不分配了一大区域连续内存给它，从而造成了空间浪费；外部分片是指系统虽有足够的内存，但却是分散的碎片，无法满足对大块“连续内存”的需求。无论何种分片都是系统有效利用内存的障碍。slab分配器使得一个页面内包含的众多小块内存可独立被分配使用，避免了内部分片，节约了空闲内存。伙伴关系把内存块按大小分组管理，一定程度上减轻了外部分片的危害，因为页框分配不在盲目，而是按照大小依次有序进行，不过伙伴关系只是减轻了外部分片，但并未彻底消除。你自己比划一下多次分配页面后，空闲内存的剩余情况吧。 </p>
+<p>所以避免外部分片的最终思路还是落到了如何利用不连续的内存块组合成“看起来很大的内存块”——这里的情况很类似于用户空间分配虚拟内存，内存逻辑上连续，其实映射到并不一定连续的物理内存上。Linux内核借用了这个技术，允许内核程序在内核地址空间中分配虚拟地址，同样也利用页表（内核页表）将虚拟地址映射到分散的内存页上。以此完美地解决了内核内存使用中的外部分片问题。内核提供vmalloc函数分配内核虚拟内存，该函数不同于kmalloc，它可以分配较Kmalloc大得多的内存空间（可远大于128K，但必须是页大小的倍数），但相比Kmalloc来说,Vmalloc需要对内核虚拟地址进行重映射，必须更新内核页表，因此分配效率上要低一些（用空间换时间）。   </p>
+<h2 id="释放函数_">释放函数   </h2>
+<p>vfree()函数释放vmalloc()或vmalloc_32()创建的非连续内存区，而vunmap()函数释放vmap()创建的内存区。两个函数都使用同一个参数 —— 将要释放的内存区的起始线性地址address；它们都依赖于<code>__vunmap()</code>函数来做实质性的工作。 </p>
+<p><code>__vunmap()</code>函数接收两个参数：将要释放的内存区的起始地址的地址addr，以及标志deallocate_pages，如果被映射到内存区内的页框应当被释放到分区页框分配器（调用vfree()）中，那么这个标志被置位，否则被清除（vunmap()被调用）。该函数执行以下操作： </p>
+<ol>
+<li><p>调用remove_vm_area()函数得到vm_struct 描述符的地址area，并清除非连续内存区中的线性地址对应的内核的页表项。 </p>
+</li>
+<li><p>如果deallocate_pages 被置位，函数扫描指向页描述符的area-&gt;pages指针数组；对于数组的每一个元素，调用<code>__free_page()</code>函数释放页框到分区页框分配器。此外，执行kfree(area-&gt;pages)来释放数组本身。 </p>
+</li>
+<li><p>调用kfree(area)来释放vm_struct 描述符。</p>
+</li>
+</ol>
+<p><br><br>本文章参考自《linux内核设计与实现》、<a href="http://blog.csdn.net/jiangyuping_fyl/article/details/7268287" target="_blank" rel="external">slab分配器</a> 及 <a href="http://blog.csdn.net/yunsongice/article/details/5536197" target="_blank" rel="external">非连续内存区</a> 。   </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/kernel/">kernel</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/07/31/linux-memory-management-3/" data-title="linux内存管理（下） | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/08/01/awk-study/" title="awk 学习">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  awk 学习</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/07/31/linux-memory-management-2/"  title="linux内存管理（中）">
+ <strong>NEXT:</strong><br/> 
+ <span>linux内存管理（中）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#非连续内存区的线性地址_"><span class="toc-number">1.</span> <span class="toc-text">非连续内存区的线性地址    </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#非连续内存区的描述符_"><span class="toc-number">2.</span> <span class="toc-text">非连续内存区的描述符 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分配非连续内存区_"><span class="toc-number">3.</span> <span class="toc-text">分配非连续内存区 </span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#释放函数_"><span class="toc-number">4.</span> <span class="toc-text">释放函数   </span></a></li></ol>
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

@@ -1,0 +1,507 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>帮您快速入门TI的Codec Engine | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="帮您快速入门TI的Codec Engine。">
+    
+    <meta name="keywords" content="davinci , codec engine">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/05/26/bang-nin-kuai-su-ru-men-tide-codec-engine-zhuan-zai/" title="帮您快速入门TI的Codec Engine" itemprop="url">帮您快速入门TI的Codec Engine</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-05-25T22:18:00.000Z" itemprop="datePublished">May 26 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+		</div>
+		
+		<p>转自TI官网：<br>德州仪器半导体技术（上海）有限公司 通用DSP 技术应用工程师 崔晶   </p>
+<p>德州仪器（TI）的第一颗达芬奇（DaVinci）芯片（处理器）DM6446已经问世快三年了。继DM644x之后，TI又陆续推出了DM643x，DM35x，DM6467，OMAP353x等一系列ARM＋DSP或ARM＋视频协处理器的多媒体处理器平台。很多有很强DSP开发经验或ARM开发经验的工程师都转到达芬奇或通用OMAP（OMAP353x）平台上开发视频监控、视频会议及便携式多媒体终端等产品。大家都面临着同一个问题，那就是如何实现ARM和DSP或协处理器的通信和协同工作？TI的数字视频软件开发包（DVSDK）提供了Codec Engine这样一个软件模块来实现ARM和DSP或协处理器的协同工作。有很多工程师反馈这个软件模块非常好用，节省了很多开发时间，也有工程师认为TI提供的资料太多，不知如何快速上手。本文将从一个第一次接触Codec Engine的工程师角度出发，归纳TI提供的相关资源（文档，例程和网络资源）并介绍相关开发调试方法帮您快速入门Codec Engine。<br>1．Codec Engine概述<br>Codec Engine是连接ARM和DSP或协处理器的桥梁，是介于应用层（ARM侧的应用程序）和信号处理层（DSP侧的算法）之间的软件模块。ARM应用程序调用Codec Engine的VISA （Video, Image, Speech, Audio）API，如图1中VIDENC_process(a, b, c )。Codec Engine的stub （ARM侧）会把参数a, b, c以及要调用DSP侧process这个信息打包，通过消息队列（message queue）传递到DSP。Codec Engine的skeleton（DSP侧）会解开这个参数包，把参数a, b, c转换成DSP侧对应的参数x, y, z（比如ARM侧传递的是虚拟地址，而DSP只能认物理地址），DSP侧的server（优先级较低，负责和ARM通信的任务）会根据process这一信息创建一个DSP侧的process(x, y, x)任务最终实现VIDENC_process(a, b, c)的操作。<br>2．Codec Engine入门第一步，从Codec Engine发布说明文档(release notes)开始<br>3．Codec Engine入门第二步，了解Codec Engine的运行环境及依赖的软件模块和工具   </p>
+<p>点击Codec Engine的发布说明文档 的Validation Info，我们可以知道Codec Engine 1.20需要和以下软件模块和工具配合使用：   </p>
+<pre><code>Framework Components <span class="number">1.20</span><span class="number">.02</span>   
+xDAIS <span class="number">5.21</span>   
+XDC Tools <span class="number">2.93</span><span class="number">.01</span>   
+DSP/BIOS Link <span class="number">1.40</span><span class="number">.05</span>, configured <span class="keyword">for</span> <span class="operator">the</span> DM6446 EVM   
+C6x Code Generation Tools <span class="built_in">version</span> <span class="number">6.0</span><span class="number">.8</span>   
+DSP/BIOS <span class="number">5.31</span><span class="number">.05</span>   
+MontaVista Linux v4<span class="number">.0</span>   
+Red Hat Enterprise Linux <span class="number">3</span> (SMP)    
+</code></pre><p>因此，我们需要在该Codec Engine安装的DVSDK文件包下面检查上面提到的软件模块和工具是否安装，版本是否正确。否则，可能会编译不过 Codec Engine的例子。那么，什么是 Framework Components，什么是xDAIS，什么又是XDC Tools呢？你可以分别到它们的根目录下浏览它们各自的发布说明文档，做一个总体的了解。<br><a id="more"></a><br>这里我们简单介绍一下，可以帮助大家尽快找到和自己相关的重点及资源。   </p>
+<p>1） Framework Components是TI提供的一个软件模块，负责DSP侧的memory 和DMA资源管理。因此，DSP算法工程师需要了解这个软件模块。<br><a href="http://tiexpressdsp.com/wiki/index.php?title=Framework_Components_FAQ" target="_blank" rel="external">http://tiexpressdsp.com/wiki/index.php?title=Framework_Components_FAQ</a><br>2） xDAIS 是一个标准，它定义了TI DSP算法接口的标准。这样大大提高了DSP算法软件的通用性。DSP算法工程师要写出能被ARM通过Codec Engine调用的算法，必须保证自己的算法接口符合这个标准。因此，DSP算法工程师也必须了解这个软件模块。   </p>
+<p><a href="http://tiexpressdsp.com/wiki/index.php?title=Category:XDAIS" target="_blank" rel="external">http://tiexpressdsp.com/wiki/index.php?title=Category:XDAIS</a>   </p>
+<p>3） XDC Tools和gmake类似，是一个工具。XDC根据用户定义的一套build指令，通过调用用户指定的ARM 工具链（Tool Chain）和DSP编译器（C6x Code Generation Tools ）build出ARM侧和DSP侧的可执行文件。可以先不必细究这个工具，只需通过编Codec Engine的例子，知道如何设置build指令就可以了。   </p>
+<p>4） DSP/BIOS Link是实现ARM和DSP之间通信的底层软件，Codec Engine就是建立在这个底层软件之上。在修改系统内存分配（缺省是256MB的DDR2）时，DSP/BIOS Link 1.38版本的用户需要修改DSP/BIOS Link的配置文件，并重新build DSP/BIOS Link。而DSP/BIOS Link 1.40版本以后的用户就无需此操作。   </p>
+<p><a href="http://tiexpressdsp.com/wiki/index.php?title=DSPLink_Overview" target="_blank" rel="external">http://tiexpressdsp.com/wiki/index.php?title=DSPLink_Overview</a><br><a href="http://wiki.davincidsp.com/index.php?title=Changing_the_DVEVM_memory_map" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Changing_the_DVEVM_memory_map</a>   </p>
+<p>5） C6x Code Generation Tools是Linux环境下C6000系列DSP的编译器。我们用CCS开发DSP时都是用的Windows环境下的DSP编译器。   </p>
+<p>6） DSP/BIOS是TI 免费提供的DSP实时操作系统。和上面C6x Code Generation Tools一样，这里的DSP/BIOS也是Linux环境下的版本。DSP系统工程师需要了解这个操作系统。   </p>
+<p><a href="http://tiexpressdsp.com/wiki/index.php?title=Category:DSPBIOS" target="_blank" rel="external">http://tiexpressdsp.com/wiki/index.php?title=Category:DSPBIOS</a>   </p>
+<p>4．Codec Engine入门第三步，根据自己的角色参考相关的文档和例子进行开发   </p>
+<p>开发ARM＋DSP平台需要三类工程师：ARM应用程序工程师、DSP算法工程师和DSP系统工程师。而开发ARM＋协处理器平台只需要ARM应用程序工程师。下面就让我们针对这三类工程师做分别介绍。如果您使用的是TI或TI第三方的编解码算法，就不需要关注DSP算法工程师的部分。如果使用ARM＋协处理器平台，就只需关心ARM应用工程师的部分。   </p>
+<p>4．1 DSP算法工程师应该如何着手？<br>这里我们不讨论如何开发DSP算法，只讨论DSP算法工程师怎样让自己的算法可以被ARM通过Codec Engine调用。（参考<a href="http://www.ti.com/litv/pdf/sprued6c，这个文档会讲到codec" target="_blank" rel="external">http://www.ti.com/litv/pdf/sprued6c，这个文档会讲到codec</a> package及相关的.xs和.xdc文件，Codec Engine1.20及以上版本的用户可以先不细究这些内容，后面会介绍工具帮您自动生成这些文件。）   </p>
+<p>1） 熟悉xDAIS和xDM标准。<br>xDM只是xDAIS的扩展，因此，需要先了解xDAIS。在xDAIS 软件包根目录下的发布说明文档里，可以很快找到关于xDAIS和xDM的文档链接。<br><a href="http://focus.ti.com/lit/ug/spruec8b/spruec8b.pdf" target="_blank" rel="external">http://focus.ti.com/lit/ug/spruec8b/spruec8b.pdf</a><br>在xDAIS安装路径下的examples/ti/xdais/dm/examples/g711有一个g711_sun_internal.c，这个算法不符合xDAIS标准。在同一个路径下的g711dec_sun_ialg.c (decoder)和g711enc_sun_ialg.c (encoder)是封装成符合xDM标准之后的编解码算法。可以通过这个例子学习和了解如何把自己算法封装成符合xDM标准的算法。<br>xDAIS 6.10及其以后的版本，包含了一个工具QualiTI，可以检查您的DSP算法是否满足xDAIS标准（但不会检查是否满足xDM）。具体请参考：<br><a href="http://tiexpressdsp.com/wiki/index.php?title=QualiTI_XDAIS_Compliance_Tool" target="_blank" rel="external">http://tiexpressdsp.com/wiki/index.php?title=QualiTI_XDAIS_Compliance_Tool</a>   </p>
+<p>2） 熟悉Framework Components。 Framework Components主要包括两个模块DSKT2和DMAN3，它们分别负责DSP侧的memory 和EDMA资源管理。DSP算法使用的memory必须是先向DSKT2提出申请并由DSKT2分配得到的。同样DSP算法使用的EDMA通道也是向DMAN3申请并由DMAN3分配得到的。而关于QDMA的操作，是通过ACPY3这个模块实现的。这样的好处是很容易对DSP侧不同的算法做整合，不同的算法之间不用担心资源（Memory和EDMA）的冲突问题。<br>在Framework Components 软件包根目录下的发布说明文档里，可以很快找到相关文档的链接。在Framework Components安装路径下packages\ti\sdo\fc\dman3\examples有一个Fast Copy的例子，可以帮您理解如何基于Framework Components的ACPY3模块实现QDMA的操作。<br>另外，有些用户DSP侧的算法比较简单，在确保不和ARM侧EDMA资源冲突的前提下在算法里直接操作EDMA不使用DMAN3也是可以的。这样做的弊端是和其它算法做整合时会遇到资源使用冲突的问题。</p>
+<p>4．2 DSP系统工程师应该如何着手？<br>通常DSP算法工程师都会把自己的符合xDM标准算法编成一个.lib文件（或 .a64P），供DSP系统工程师调用。DSP系统工程师最终build出一个DSP Server（也就是DSP的可执行程序.x64P，和CCS下编译生成的.out类似）。（参考<a href="http://focus.ti.com/lit/ug/sprued5b/sprued5b.pdf，这个文档会讲到.xdc和.bld等文件，Codec" target="_blank" rel="external">http://focus.ti.com/lit/ug/sprued5b/sprued5b.pdf，这个文档会讲到.xdc和.bld等文件，Codec</a> Engine1.20及以上版本的用户可以先不细究，后面介绍工具帮您自动生成这些文件。）   </p>
+<p>1） 如果现在有一个.lib文件（或 .a64P）（算法必须符合xDM标准），如何生成自己的DSP Server呢？下面URL有详细的关于RTSC Codec and Server Package Wizard工具介绍，教您如何把一个.lib文件封装成RTSC Codec 包和RTSC DSP Server包，并最终build出DSP的可执行程序.x64P。<br><a href="http://wiki.davincidsp.com/index.php?title=RTSC_Codec_And_Server_Package_Wizards" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=RTSC_Codec_And_Server_Package_Wizards</a><br><a href="http://wiki.davincidsp.com/index.php?title=I_just_want_my_video_codec_to_work_with_the_DVSDK" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=I_just_want_my_video_codec_to_work_with_the_DVSDK</a>   </p>
+<p>2） 如果您使用的是Codec Engine 1.20以前的版本，请参考Codec Engine安装路径下examples/servers/video_copy这个例子。这时就需要搞清楚sprued6c.pdf和sprued5b.pdf中提到的.xdc和.xs等文件的功能，也可以在video_copy中的相关文件的基础上修改手动创建出自己的RTSC Codec包和RTSC DSP server包。   </p>
+<p>3） 创建好RTSC Codec 和RTSC DSP Server包之后，就是如何build出.x64P的问题了。点击图2所示的Examples，就可以找到build Codec Engine例子的说明文档的链接。按照这个文档做一遍后，就可以对如何build Codec Server有一个清楚的了解。其中关键是修改user.bld和xdcpaths.mak文件，设置Codec Engine依赖的其它软件模块和工具的正确路径。   </p>
+<p>4） 如果自己的硬件DDR2大小和例子中的256Mbytes不一致，需要修改DSP的.tcf文件和其他配置。还有些工程师不清楚如何分配memory及如何决定具体段，如：DDRALGHEAP和DDR的大小，以及如何配置./loadmodules里的参数都请参考： <a href="http://wiki.davincidsp.com/index.php?title=Changing_the_DVEVM_memory_map。" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Changing_the_DVEVM_memory_map。</a>   </p>
+<p>4．3 ARM应用程序工程师应该如何着手？<br>ARM应用工程师需要调用Codec Engine的VISA API，最终编出ARM侧的可执行程序，因此，必须根据自己的应用学习相关的VISA API、如何创建应用侧Codec Engine的package及配置文件。（参考<a href="http://focus.ti.com/lit/ug/sprue67d/sprue67d.pdf，这个文档也涉及到如何调试Codec" target="_blank" rel="external">http://focus.ti.com/lit/ug/sprue67d/sprue67d.pdf，这个文档也涉及到如何调试Codec</a> Engine的内容）。</p>
+<p>1）了解ARM应用程序调用Codec Engine的流程、VISA API和其他Codec Engine API。可以参考Codec Engine安装路径下examples/apps/video_copy的例子（较简单）或者DVSDK安装路径下demos里的encode/decode/encodedecode例子（较复杂）。<br><a href="http://wiki.davincidsp.com/index.php?title=Configuring_Codec_Engine_in_Arm_apps_with_createFromServer" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Configuring_Codec_Engine_in_Arm_apps_with_createFromServer</a><br>2） 了解ceapp.cfg文件。sprue67d.pdf有相关介绍，可以先读懂<br>examples/apps/video_copy/ceapp.cfg。   </p>
+<p>3） 用4.2 3)中提到的方法学习如何build ARM侧的可执行程序。   </p>
+<p>4） 如何在多线程中调用codec engine，参考：<br><a href="http://wiki.davincidsp.com/index.php?title=Multiple_Threads_using_Codec_Engine_Handle" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Multiple_Threads_using_Codec_Engine_Handle</a>   </p>
+<p>5）还可以参考以下三个文档了解更多TI demo的ARM应用程序的结构、线程调度等具体的问题。   </p>
+<p>EncodeDecode Demo for the DaVinci DVEVM/DVSDK 1.2 (Rev. A) (spraah0a.htm, 8 KB)<br>27 Jun 2007 Abstract  </p>
+<p>Encode Demo for the DaVinci DVEVM/DVSDK 1.2 (Rev. A) (spraa96a.htm, 8 KB)<br>27 Jun 2007 Abstract  </p>
+<p>Decode Demo for the DaVinci DVEVM/DVSDK 1.2 (Rev. A) (spraag9a.htm, 8 KB)<br>27 Jun 2007 Abstract  </p>
+<p>5．使用中常碰到的问题  </p>
+<p>1）如果遇到问题可以先访问 <a href="http://wiki.davincidsp.com/index.php?title=Codec_Engine_FAQ。" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Codec_Engine_FAQ。</a><br>2）有些工程师没有DSP开发经验，或者暂时没有仿真器通过JTAG调试DSP。可以参考下面网页的内容，先做一个“Hello World”的例程对ARM和DSP如何协同工作有个感性认识。   </p>
+<p><a href="http://wiki.davincidsp.com/index.php?title=How_to_build_an_ARM/DSP_Hello_World_program_on_the_DaVinci_EVM" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=How_to_build_an_ARM/DSP_Hello_World_program_on_the_DaVinci_EVM</a>   </p>
+<p>3） 很多工程师都是参考video_copy的例子，在它的基础上把自己的算法加进去。因为有源代码，这样比较容易。但肯定要根据自己算法的需要修改ARM和DSP之间传递的buffer和参数，重要的是先保证ARM侧的应用程序可以把buffer和参数正确传递到DSP，DSP可以把处理之后的buffer正确的传到ARM侧的应用程序。把这个通路打通之后，就比较容易定位问题是出在ARM应用程序还是DSP侧的算法。另外，参考video_copy例子时注意代码的注释，以便清楚哪一句代码可以删掉哪一句必须要修改或保留。   </p>
+<p>如果要扩展xDM的数据结构请参考：   </p>
+<p><a href="http://wiki.davincidsp.com/index.php?title=Extending_data_structures_in_xDM。" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Extending_data_structures_in_xDM。</a>   </p>
+<p>4） Codec Engine DSP侧会涉及到Cache一致性的问题。请参考：<br><a href="http://wiki.davincidsp.com/index.php?title=Cache_Management" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Cache_Management</a>   </p>
+<p>5） 关于Codec Engine系统调试，有以下几种方法：   </p>
+<pre><code>    A. 打开Codec Engine <span class="keyword">trace</span>，通过打印信息看问题出在什么地方。比如engine_open失败，DSP侧不能创建codec 等等。   
+
+        a) Codec Engine <span class="number">2.0</span>及以上版本，请参考： http:<span class="comment">//wiki.davincidsp.com/index.php?title=Easy_CE_Debugging_Feature_in_CE_2.0   </span>
+
+        b) Codec Engine <span class="number">1.</span>x版本，请参考： http:<span class="comment">//wiki.davincidsp.com/index.php?title=TraceUtil   </span>
+
+    B. ARM应用程序跑起来后，用仿真器连上CCS调试DSP侧程序，参考： http:<span class="comment">//wiki.davincidsp.com/index.php?title=Debugging_the_DSP_side_of_a_CE_application_on_DaVinci_using_CCS   </span>
+
+    C. 用Soc Analyzer可以做系统调试之外，还可以统计具体函数运行（ARM和DSP侧）时间（benchmark）。请参考： http:<span class="comment">//tiexpressdsp.com/wiki/index.php?title=SoC_Analyzer    </span>
+</code></pre><p>6） 因为Codec Engine是介于ARM 应用程序和编解码算法中间的软件模块，很多工程师非常想知道它的开销(overhead)，请参考：<br><a href="http://wiki.davincidsp.com/index.php?title=Codec_Engine_Overhead" target="_blank" rel="external">http://wiki.davincidsp.com/index.php?title=Codec_Engine_Overhead</a>   </p>
+<p>7）如何在Linux环境下编DSP的汇编或线性汇编程序？<br>在Codec Engine安装路径下/packages/config.bld文件里<br>var C64P = xdc.useModule(‘ti.targets.C64P’);<br>之后添加：<br>    C64P.extensions[“.sa”] = {<br>    suf: “.sa”, typ: “asm:-fl”<br>    }<br>或<br>    C64P.extensions[“.asm”] = {<br>    suf: “.asm”, typ: “asm:-fa”<br>    }<br>8）DSP侧如何统计具体函数运行时间？<br>TI DSPC64x+内核有一个64位的硬件定时器（Time Stamp Counter），它的频率和CPU频率一致。<br>最简单的办法是使用TSC的低32位TSCL。注意在DM644x中，TSCH用于ARM。   </p>
+<pre><code><span class="comment">#include void main (){</span>
+…
+<span class="variable">TSCL=</span><span class="number">0</span>;
+…
+<span class="variable">t1=</span>TSCL;
+my_code_to_benchmark();
+<span class="variable">t2=</span>TSCL;
+printf(“<span class="comment"># cycles == %d\n”, (t2-t1));</span>
+}
+</code></pre><p>6．结语   </p>
+<p>以上针对如何上手TI的Codec Engine做了简单的归纳，还有很多具体细节的问题没有涉及到。还请各位工程师从自己要用的软件模块发布说明文档开始找到相关的文档并研究。经常访问TI的网页，<a href="http://wiki.davincidsp.com和http://tiexpressdsp.com/wiki找到最新的信息和资料。也非常欢迎您在wiki上提问。" target="_blank" rel="external">http://wiki.davincidsp.com和http://tiexpressdsp.com/wiki找到最新的信息和资料。也非常欢迎您在wiki上提问。</a>   </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/davinci/">davinci</a><a href="/tags/codec-engine/">codec engine</a><a href="/tags/ti/">ti</a><a href="/tags/embedded/">embedded</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/davinci/">davinci</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/05/26/bang-nin-kuai-su-ru-men-tide-codec-engine-zhuan-zai/" data-title="帮您快速入门TI的Codec Engine | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/05/26/arch-linux-xia-lxrde-an-zhuang/" title="arch linux 下lxr的安装">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  arch linux 下lxr的安装</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/05/25/archbang-arch-linux-an-zhuang-inode/"  title="archbang arch linux 安装inode ">
+ <strong>NEXT:</strong><br/> 
+ <span>archbang arch linux 安装inode 
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

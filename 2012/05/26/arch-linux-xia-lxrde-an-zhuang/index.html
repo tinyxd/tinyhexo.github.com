@@ -1,0 +1,566 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>arch linux 下lxr的安装 | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="arch linux 下lxr的安装">
+    
+    <meta name="keywords" content="linux,archlinux,lxr">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/05/26/arch-linux-xia-lxrde-an-zhuang/" title="arch linux 下lxr的安装" itemprop="url">arch linux 下lxr的安装</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-05-26T15:14:00.000Z" itemprop="datePublished">May 26 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+		</div>
+		
+		<p>经过自己两天的折腾，参考了好几个资料终于搞定。<br>参考资料见文章末尾。<br>LXR是使用WEB方式下的源代码整理浏览工具，最大的用途在于清理出了代码中函数、变量的定义、说明、应用的关系，并用链接的形式表现在网页上。LXR整理出代码的结构和调用关系，存在数据库中，并在显示时与源代码树结合，从功能上说，包括代码浏览、标识符搜索、文本搜索和文件搜索，其中的文本搜索和文件搜索利用的是第三方工具（即glimpse或swish-e）（我使用的glimpse）。它的主要组成部分包括三个：Perl编写的网页/CGI部分，基于MySQL的索引数据管理（新版本才有）和通用的文本搜索工具。目前的版本，采用Glimpse或者Swish-e中的一种作为通用文本搜索工具。在安装上，基本上也按照这三个部分来配置。    </p>
+<p>1.下载安装所需的工具。<br>a。glimpse（<a href="http://webglimpse.net/download.php）" target="_blank" rel="external">http://webglimpse.net/download.php）</a></p>
+<p>安装glimpse:（其中会用到flex 安装下就行了）</p>
+<pre><code><span class="variable">$ </span>./configure
+
+<span class="variable">$ </span>make
+
+<span class="variable">$ </span>sudo make install
+</code></pre><p>b。pacman -S apache php php-apache mysql</p>
+<p>c。pacman -s ctags perl-dbi perl-dbd-mysql</p>
+<p>d。安装完mysql 以root用户身份运行设置脚本</p>
+<pre><code><span class="preprocessor"># rc.d start mysqld &amp;&amp; mysql_secure_installation</span>
+</code></pre><p>然后重启 Mysql</p>
+<pre><code><span class="preprocessor"># rc.d restart mysqld</span>
+</code></pre><p>本文需要设置密码为空（后面有说明）<br><a id="more"></a><br>用mysql -p -u root</p>
+<p>登陆mysql,然后执行下面语句: set password for ‘root’@’localhost’ =password(‘’);flush privileges;e.安装Perl的Magic模块</p>
+<p>下载地址<a href="http://search.cpan.org/~knok/File-MMagic-1.27/MMagic.pm" target="_blank" rel="external">http://search.cpan.org/~knok/File-MMagic-1.27/MMagic.pm</a></p>
+<pre><code>[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# ls ChangeLog COPYING      MANIFEST MMagic.pm README.ja contrib    Makefile.PL META.yml README.en t [root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# perl Makefile.PL Checking <span class="keyword">if</span> your kit <span class="keyword">is</span> complete... Looks good Writing Makefile <span class="keyword">for</span> <span class="keyword">File</span>::MMagic [root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# ls
+ChangeLog COPYING   Makefile.PL META.yml   README.en t
+contrib    Makefile MANIFEST     MMagic.pm README.ja
+
+[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# make
+cp MMagic.pm blib/lib/<span class="keyword">File</span>/MMagic.pm
+Manifying blib/man3/<span class="keyword">File</span>::MMagic<span class="number">.3</span>pm
+[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# make install
+Installing /usr/lib/perl5/site_perl/<span class="number">5.8</span><span class="number">.8</span>/<span class="keyword">File</span>/MMagic.pm
+Installing /usr/share/man/man3/<span class="keyword">File</span>::MMagic<span class="number">.3</span>pm Writing /usr/lib/perl5/site_perl/<span class="number">5.8</span><span class="number">.8</span>/i386-linux-thread-multi/auto/<span class="keyword">File</span>/MMagic/.packlist Appending installation info <span class="keyword">to</span> /usr/lib/perl5/<span class="number">5.8</span><span class="number">.8</span>/i386-linux-thread-multi/perllocal.pod
+</code></pre><p>2.设置</p>
+<p>尽管lxr源码里有一个INSTALL文件，但不详，这里写下来我自己配置的步骤。<br>1）位置规划<br>LXR除了数据库那一部分不需要考虑存放位置以外，还有CGI/HTML部分、索引生成工具部分和</p>
+<p>所需要索引的源代码部分需要考虑，我的实践中使用的与INSTALL缺省的不同，最大的一点不同在于我</p>
+<p>将WEB部分和工具部分分离开，只允许WEB部分暴露给浏览器——主要是基于也许会更安全一些的考虑。<br>另一个不同是用符号链接而不是真正的源代码目录作为源代码部分，因为LXR索引的Linux Kernel是最常用的，</p>
+<p>而Kernel本身还被用来重编内核和升级，所以不适合完全拷贝过来。<br>本例中使用的是/usr/local/lxr目录作为LXR的根目录。 </p>
+<pre><code><span class="preprocessor">#tar zxvf lxr-0.9.1.tar.gz -C /usr/local ；将lxr解压到/usr/local/lxr下 </span>
+<span class="preprocessor">#cd /usr/local/</span>
+
+<span class="preprocessor">#mv Local.pm diff ident search source templates  #将web相关部分移到templates下  </span>
+
+<span class="preprocessor">#mv templates http                            #http目录，用于存放WEB部分  </span>
+
+<span class="preprocessor">#ln -s /usr/local/lxr/http/Local.pm /usr/lib/perl5/site_perl/ </span>
+
+<span class="preprocessor">#ln -s http/lxr.conf         #为web部分和工具部分都需要用的文件建符号连接 </span>
+<span class="preprocessor">#mv lib /usr/lib/perl5/site_perl/LXR  #将自定义的perl库文件拷贝</span>
+</code></pre><p>到perl/mod_perl使用的缺省库文件目录中 </p>
+<pre><code>#ln -s <span class="regexp">/usr/</span>lib<span class="regexp">/perl5 /</span>usr<span class="regexp">/local/</span>lib  #否则在运行时会出现Can<span class="string">'t locate LXR/Files.pm等错误 </span>
+</code></pre><p>建立源代码根目录,（当前在lxr目录）</p>
+<pre><code><span class="preprocessor">#mkdir src ；源代码部分的根 </span>
+
+并将 linux-<span class="number">2.6</span><span class="number">.39</span>的源码链接到此目录下。
+
+<span class="preprocessor">#cd src </span>
+
+mkdir glimpse 
+
+ln -s ../../../../src/linux-<span class="number">2.6</span><span class="number">.39</span> <span class="number">2.6</span><span class="number">.39</span>
+
+<span class="preprocessor">#vi versions ；编辑/usr/local/lxr/src/versions文件，内容为2.6.39，表示让lxr索引2.6.39</span>
+
+<span class="preprocessor">#cd ../../ ；回到/usr/local/lxr </span>
+</code></pre><p>2）修改lxr.conf<br>准备好了目录结构，下一步就是改写lxr.conf文件。缺省的lxr.conf已经从templates拷贝到/usr/local/lxr/http/下了，</p>
+<p>并在/usr/local/lxr/下有个连接。 注释掉所有与swish-e相关的变量定义,其余设置如下</p>
+<pre><code><span class="string">'glimpsebin'</span> =&gt; <span class="string">'/usr/local/bin/glimpse'</span>, 
+
+<span class="string">'glimpseindex'</span> =&gt; <span class="string">'/usr/local/bin/glimpseindex'</span>, 
+
+<span class="string">'ectagsbin'</span> =&gt; <span class="string">'/usr/bin/ctags'</span>, 
+
+<span class="string">'genericconf'</span> =&gt; <span class="string">'/usr/lib/perl5/site_perl/LXR/Lang/generic.conf'</span> 
+
+<span class="string">'ectagsconf'</span> =&gt; <span class="string">'/usr/lib/perl5/site_perl/LXR/Lang/ectags.conf'</span> 
+
+<span class="string">'baseurl'</span> =&gt; <span class="string">'http://192.168.1.102/lxr'</span>                 <span class="comment">#主机的IP地址 </span>
+
+<span class="string">'range'</span> =&gt; [ readfile(<span class="string">'/usr/local/lxr/src/versions'</span>) ]  
+
+<span class="string">'default'</span> =&gt; <span class="string">'2.6.39'</span>                                  <span class="comment">#缺省的代码树名 </span>
+
+<span class="comment"># Templates used for headers and footers 下所有路径均设置为绝对路径,如 </span>
+
+<span class="string">'htmlhead'</span> =&gt; <span class="string">'/usr/local/lxr/http/html-head.html'</span> 
+
+
+
+<span class="string">'sourceroot'</span> =&gt; <span class="string">'/usr/local/lxr/src'</span>       <span class="comment">#源码根目录    (注意，最后无/) </span>
+
+<span class="string">'sourcerootname'</span> =&gt; <span class="string">'Linux-$v'</span>        <span class="comment">#它将显示在缺省的最高级源码目录上 </span>
+
+<span class="string">'glimpsedir'</span> =&gt; <span class="string">'/usr/local/lxr/src/glimpse'</span>         <span class="comment">#(注意，最后无/) </span>
+</code></pre><p>3）apache的httpd.conf (/etc/httpd/conf/httpd.conf)<br>保证装了mod_perl的时候，在httpd.conf中添加以下几行： </p>
+<pre><code><span class="keyword">Alias</span> /lxr/ /usr/local/lxr/http/ 
+
+<span class="tag">&lt;Directory /usr/local/lxr/http/&gt;</span>
+
+<span class="keyword">AllowOverride</span> None
+
+<span class="keyword"><span class="common">Options</span></span> FollowSymLinks
+
+<span class="tag">&lt;Files ~  "(search|source|ident|diff|find)$"&gt;</span>
+
+<span class="keyword"><span class="common">SetHandler</span></span> perl-script
+
+<span class="keyword">PerlHandler</span> ModPerl::Registry       #注意这里不是Apache::Registry
+
+<span class="keyword"><span class="common">Options</span></span> +ExecCGI
+
+<span class="keyword">PerlOptions</span> +ParseHeaders
+
+<span class="tag">&lt;/Files&gt;</span>
+
+<span class="tag">&lt;/Directory&gt;</span> 
+</code></pre><p>表示访问/lxr就相当于访问/usr/local/lxr/http，且用perl解释search、source、ident、diff和find几个脚本，</p>
+<p>而其他的仍然当成html来使用。<br>如果没有mod_perl，可以用SetHandler cgi-script代替perl-script，一样可以用，PerlHandler就不用了。<br>4.initialize<br>1）初始化MySQL数据库 (mysql) :</p>
+<p>进入lxr目录/usr/local/lxr</p>
+<p># mysql   </p>
+<p>(反斜杠). initdb-mysql</p>
+<p>2).建glimpse索引<br>在/usr/local/lxr/src/2.6.39/下运行’find . -name “*.[chS]” -follow | glimpseindex -H . -o -F’，索引所有.c、.h、.S（汇编）文件。这个过程比较耗时，但比起下一个过程来，就小巫见大巫了。<br>3.)建identity索引 这是LXR精髓所在<br>在/usr/local/lxr/下运行’./genxref —version=2.6.39—url=<a href="http://192.168.1.102/lxr&#39;，这个过程时间比较长，其结果就是在MySQL中添东西。如果已经做过索引了，它就只关心那些修改过的或新的文件，速度就快多了。这个过程如果中断了，最好清空数据库重新来过，否则可能会有错误。" target="_blank" rel="external">http://192.168.1.102/lxr&#39;，这个过程时间比较长，其结果就是在MySQL中添东西。如果已经做过索引了，它就只关心那些修改过的或新的文件，速度就快多了。这个过程如果中断了，最好清空数据库重新来过，否则可能会有错误。</a><br>4).修改权限<br>最简单的办法就是把/usr/local/lxr/http下所有的文件都改成apache的属主。在/usr/local/lxr/下运行’chown -R apache.apache http ‘。<br>5.startup   (rc.d restart httpd;rc.d restart mysqld)<br>重启mysql和httpd，然后访问<a href="http://192.168.1.102/lxr/source/就可以了。比较奇怪的是，因为这个cgi允许用类似目录一样的形式（source/）来访问，所以，如果服务器端有更新，浏览器端仍会使用老的页面，refresh也没用。这时只有清空本地cache了。" target="_blank" rel="external">http://192.168.1.102/lxr/source/就可以了。比较奇怪的是，因为这个cgi允许用类似目录一样的形式（source/）来访问，所以，如果服务器端有更新，浏览器端仍会使用老的页面，refresh也没用。这时只有清空本地cache了。</a><br> 6.参考博客   </p>
+<p>[内核分析]LXR安装心得(0.9.3版)—-RH8.0测试通过<a href="http://www.cnblogs.com/huqingyu/archive/2005/02/19/106080.html" target="_blank" rel="external">http://www.cnblogs.com/huqingyu/archive/2005/02/19/106080.html</a></p>
+<p>利用LXR建立源代码交叉索引 【原】<a href="http://hi.baidu.com/kissdev/blog/item/6e493daf15cf33c77cd92af9.html" target="_blank" rel="external">http://hi.baidu.com/kissdev/blog/item/6e493daf15cf33c77cd92af9.html</a></p>
+<p>LXR安装过程简介(0.3版) <a href="http://blog.chinaunix.net/u1/46901/showart_397299.html" target="_blank" rel="external">http://blog.chinaunix.net/u1/46901/showart_397299.html</a></p>
+<p>高亮LXR的代码 <a href="http://mjxian.cn/wordpress/archives/lxr-syntax-highlighting.html" target="_blank" rel="external">http://mjxian.cn/wordpress/archives/lxr-syntax-highlighting.html</a></p>
+<p>mysql wiki：<a href="https://wiki.archlinux.org/index.php/MySQL_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87" target="_blank" rel="external">https://wiki.archlinux.org/index.php/MySQL_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87</a></p>
+<p>附：部分软件版本</p>
+<p>File-MMagic-1.27.tar.gz</p>
+<p>perl-dbi-1.616-2-i686.pkg.tar.xz</p>
+<p>perl-dbd-mysql-4.020-1-i686.pkg.tar.xz</p>
+<p>lxr-0.9.10.tgz</p>
+<p>glimpse-4.18.6</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/archlinux/">archlinux</a><a href="/tags/lxr/">lxr</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/05/26/arch-linux-xia-lxrde-an-zhuang/" data-title="arch linux 下lxr的安装 | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/05/27/arch-linuxxia-java-sdkde-an-zhuang-yu-pei-zhi/" title="arch linux下java SDK的安装与配置">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  arch linux下java SDK的安装与配置</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/05/26/bang-nin-kuai-su-ru-men-tide-codec-engine-zhuan-zai/"  title="帮您快速入门TI的Codec Engine">
+ <strong>NEXT:</strong><br/> 
+ <span>帮您快速入门TI的Codec Engine
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

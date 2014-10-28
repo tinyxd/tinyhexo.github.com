@@ -1,0 +1,467 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>排序算法总结（三） | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="排序算法总结（三）选择排序">
+    
+    <meta name="keywords" content="c++,software,选择排序">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/06/28/select-sort/" title="排序算法总结（三）" itemprop="url">排序算法总结（三）</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-06-28T04:38:00.000Z" itemprop="datePublished">Jun 28 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		<ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#直接选择排序（不稳定）"><span class="toc-number">1.</span> <span class="toc-text">直接选择排序（不稳定）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#堆排序(Heapsort)"><span class="toc-number">2.</span> <span class="toc-text">堆排序(Heapsort)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#“堆”定义"><span class="toc-number">2.1.</span> <span class="toc-text">“堆”定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#堆的高度"><span class="toc-number">2.2.</span> <span class="toc-text">堆的高度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#堆排序思想"><span class="toc-number">2.3.</span> <span class="toc-text">堆排序思想</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#特点"><span class="toc-number">2.4.</span> <span class="toc-text">特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#堆排序与直接选择排序的区别"><span class="toc-number">2.5.</span> <span class="toc-text">堆排序与直接选择排序的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#算法分析"><span class="toc-number">2.6.</span> <span class="toc-text">算法分析</span></a></li></ol></li></ol>
+		</div>
+		
+		<p>选择排序是指在每次排序时，选择最大或者最小项，将其放入适当的位置上，反复操作，直到所有数据排序完成为止。选择排序是一类比较常见的排序，现实生活中也比较常见，比如一个班级的学生排队，先将最高的学生排到队首，然后在其他学生中再挑出最高的一个，排在第二的位置，以此类推，直到全部排完。  </p>
+<p>选择排序的交换操作介于 0 和 ( n - 1 ) 次之间。选择排序的比较操作为 n ( n - 1 ) / 2 次之间。选择排序的赋值操作介于 0 和 3 ( n - 1 ) 次之间。 比较次数O（  n^2 ）,比较次数与关键字的初始状态无关，总的比较次数N=(n-1)+(n-2)+…+1=n*(n-1)/2。 交换次数O(n),最好情况是，已经有序，交换0次；最坏情况是，逆序，交换n-1次。 交换次数比冒泡排序少多了，由于交换所需CPU时间比比较所需的CPU时间多，n值较小时，选择排序比冒泡排序快。    </p>
+<h2 id="直接选择排序（不稳定）">直接选择排序（不稳定）</h2>
+<figure class="highlight c++"><figcaption><span>直接选择排序</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> SelectSort(elemtype R[], <span class="keyword">int</span> n)</div><div class="line">{</div><div class="line">	<span class="keyword">int</span> i, j, m;</div><div class="line">	elemtype t;</div><div class="line">	<span class="keyword">for</span>(i=<span class="number">0</span>; i&lt;n-<span class="number">1</span>; i++)</div><div class="line">	{</div><div class="line">		m = i;</div><div class="line">		<span class="keyword">for</span>(j = i+<span class="number">1</span>; j &lt; n; j++)</div><div class="line">		{</div><div class="line">			<span class="keyword">if</span>(R[j] &lt; R[m])</div><div class="line">			m = j;</div><div class="line">		}</div><div class="line">		<span class="keyword">if</span>(m != i)</div><div class="line">		{</div><div class="line">			t = R[i];</div><div class="line">			R[i] = R[m];</div><div class="line">			R[m] = t;</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p><a id="more"></a></p>
+<h2 id="堆排序(Heapsort)">堆排序(Heapsort)</h2>
+<h3 id="“堆”定义">“堆”定义</h3>
+<p>树中任一非叶结点的关键字均不大于（或不小于）其左右孩子（若存在）结点的关键字。   </p>
+<h3 id="堆的高度">堆的高度</h3>
+<p>堆可以被看成是一棵树，结点在堆中的高度可以被定义为从本结点到叶子结点的最长简单下降路径上边的数目；定义堆的高度为树根的高度。我们将看到，堆结构上的一些基本操作的运行时间至多是与树的高度成正比，为O（lgn）。   </p>
+<h3 id="堆排序思想">堆排序思想</h3>
+<p>堆排序利用了大根堆（或小根堆）堆顶记录的关键字最大（或最小）这一特征，使得在当前无序区中选取最大（或最小）关键字的记录变得简单。<br>（1）用大根堆排序的基本思想<br>① 先将初始文件R[1..n]建成一个大根堆，此堆为初始的无序区<br>② 再将关键字最大的记录R[1]（即堆顶）和无序区的最后一个记录R[n]交换，由此得到新的无序区R[1..n-1]和有序区R[n]，且满足R[1..n-1].keys≤R[n].key<br>③由于交换后新的根R[1]可能违反堆性质，故应将当前无序区R[1..n-1]调整为堆。然后再次将R[1..n-1]中关键字最大的记录R[1]和该区间的最后一个记录R[n-1]交换，由此得到新的无序区R[1..n-2]和有序区R[n-1..n]，且仍满足关系R[1..n-2].keys≤R[n-1..n].keys，同样要将R[1..n-2]调整为堆。<br>……</p>
+<p>直到无序区只有一个元素为止。<br>（2）大根堆排序算法的基本操作：<br>① 初始化操作：将R[1..n]构造为初始堆；<br>② 每一趟排序的基本操作：将当前无序区的堆顶记录R[1]和该区间的最后一个记录交换，然后将新的无序区调整为堆（亦称重建堆）。<br>注意：<br>①只需做n-1趟排序，选出较大的n-1个关键字即可以使得文件递增有序。 ②用小根堆排序与利用大根堆类似，只不过其排序结果是递减有序的。堆排序和直接选择排序相反：在任何时刻堆排序中无序区总是在有序区之前，且有序区是在原向量的尾部由后往前逐步扩大至整个向量为止。   </p>
+<h3 id="特点">特点</h3>
+<p>堆排序（HeapSort）是一树形选择排序。堆排序的特点是：在排序过程中，将R[l..n]看成是一棵完全二叉树的顺序存储结构，利用完全二叉树中双亲结点和孩子结点之间的内在关系（参见二叉树的顺序存储结构），在当前无序区中选择关键字最大（或最小）的记录   </p>
+<h3 id="堆排序与直接选择排序的区别">堆排序与直接选择排序的区别</h3>
+<p>直接选择排序中，为了从R[1..n]中选出关键字最小的记录，必须进行n-1次比较，然后在R[2..n]中选出关键字最小的记录，又需要做n-2次比较。事实上，后面的n-2次比较中，有许多比较可能在前面的n-1次比较中已经做过，但由于前一趟排序时未保留这些比较结果，所以后一趟排序时又重复执行了这些比较操作。<br>堆排序可通过树形结构保存部分比较结果，可减少比较次数。   </p>
+<h3 id="算法分析">算法分析</h3>
+<p>堆排序的时间，主要由建立初始堆和反复重建堆这两部分的时间开销构成，它们均是通过调用Heapify实现的。堆排序的最坏时间复杂度为O(nlogn)。堆序的平均性能较接近于最坏性能。由于建初始堆所需的比较次数较多，所以堆排序不适宜于记录数较少的文件。堆排序是就地排序，辅助空间为O(1），它是<strong>不稳定</strong>的排序方法。   </p>
+<figure class="highlight c"><figcaption><span>堆排序c语言实现</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//C语言描述</span></div><div class="line"><span class="comment">// array是待调整的堆数组，i是待调整的数组元素的位置，nlength是数组的长度</span></div><div class="line"><span class="keyword">void</span> HeapAdjust(<span class="keyword">int</span> <span class="built_in">array</span>[],<span class="keyword">int</span> i,<span class="keyword">int</span> nLength)<span class="comment">//本函数功能是：根据数组array构建大根堆</span></div><div class="line">{</div><div class="line">	<span class="keyword">int</span> nChild;</div><div class="line">	<span class="keyword">int</span> nTemp;</div><div class="line">	<span class="keyword">for</span> (nTemp = <span class="built_in">array</span>[i]; <span class="number">2</span> * i + <span class="number">1</span> &lt; nLength; i = nChild)</div><div class="line">	{</div><div class="line">		<span class="comment">// 子结点的位置=2*（父结点位置）+ 1</span></div><div class="line">		nChild = <span class="number">2</span> * i + <span class="number">1</span>;</div><div class="line">		<span class="comment">// 得到子结点中较大的结点</span></div><div class="line">		<span class="keyword">if</span> (nChild &lt; nLength - <span class="number">1</span> && <span class="built_in">array</span>[nChild + <span class="number">1</span>] &gt; <span class="built_in">array</span>[nChild])</div><div class="line">		++nChild;</div><div class="line">		<span class="comment">// 如果较大的子结点大于父结点那么把较大的子结点往上移动，替换它的父结点</span></div><div class="line">		<span class="keyword">if</span> (nTemp &lt; <span class="built_in">array</span>[nChild])</div><div class="line">		{</div><div class="line">		<span class="built_in">array</span>[i]= <span class="built_in">array</span>[nChild];</div><div class="line">		}</div><div class="line">		<span class="keyword">else</span> <span class="comment">// 否则退出循环</span></div><div class="line">		{</div><div class="line">		<span class="keyword">break</span>;</div><div class="line">		}</div><div class="line">		<span class="comment">// 最后把需要调整的元素值放到合适的位置</span></div><div class="line">		<span class="built_in">array</span>[nChild]= nTemp;</div><div class="line">	}</div><div class="line">}</div><div class="line">	<span class="comment">// 堆排序算法</span></div><div class="line"><span class="keyword">void</span> HeapSort(<span class="keyword">int</span> <span class="built_in">array</span>[],<span class="keyword">int</span> length)</div><div class="line">{</div><div class="line">	<span class="comment">// 调整序列的前半部分元素，调整完之后第一个元素是序列的最大的元素</span></div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = length / <span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; --i)</div><div class="line">	{</div><div class="line">	HeapAdjust(<span class="built_in">array</span>,i,length);</div><div class="line">	}</div><div class="line">	<span class="comment">// 从最后一个元素开始对序列进行调整，不断的缩小调整的范围直到第一个元素</span></div><div class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = length - <span class="number">1</span>; i &gt; <span class="number">0</span>; --i)</div><div class="line">	{</div><div class="line">	<span class="comment">// 把第一个元素和当前的最后一个元素交换，</span></div><div class="line">	<span class="comment">// 保证当前的最后一个位置的元素都是在现在的这个序列之中最大的</span></div><div class="line">	Swap(&<span class="built_in">array</span>[<span class="number">0</span>],&<span class="built_in">array</span>[i]);</div><div class="line">	<span class="comment">// 不断缩小调整heap的范围，每一次调整完毕保证第一个元素是当前序列的最大值</span></div><div class="line">	HeapAdjust(<span class="built_in">array</span>,<span class="number">0</span>,i);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight c++"><figcaption><span>堆排序算法（c++描述）</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//堆排序算法（C++描述）</span></div><div class="line"><span class="preprocessor">#<span class="keyword">define</span> MAX 100<span class="comment">//数据元素的最大个数</span></span></div><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span></div><div class="line">{</div><div class="line">	<span class="keyword">int</span> r[MAX];</div><div class="line">	<span class="keyword">int</span> length;</div><div class="line">}SqList;<span class="comment">//定义一个线性表用于存放数据元素</span></div><div class="line"><span class="keyword">void</span> HeapAdjust(SqList &L,<span class="keyword">int</span> s,<span class="keyword">int</span> m)</div><div class="line">{</div><div class="line">	<span class="comment">//已知L.r[s...m]中记录除L.r[s]外均满足堆的定义，本函数用于使L.r[s...m]成为一个大顶堆</span></div><div class="line">	<span class="keyword">int</span> j;</div><div class="line">	<span class="keyword">int</span> e=L.r[s];</div><div class="line">	<span class="keyword">for</span>(j=<span class="number">2</span>*s;j&lt;=m;j*=<span class="number">2</span>)</div><div class="line">	{</div><div class="line">		<span class="keyword">if</span>(j&lt;M&&L.R[J]&lt;L.R[J+<span class="number">1</span>]) ++j;</div><div class="line">		<span class="keyword">if</span>(e&gt;=L.r[j]) <span class="keyword">break</span>;</div><div class="line">		L.r[s]=L.r[j];</div><div class="line">		s=j;</div><div class="line">	}</div><div class="line">	L.r[s]=e;</div><div class="line">}</div><div class="line"><span class="keyword">void</span> HeapSort(SqList &L)</div><div class="line">{</div><div class="line">	<span class="comment">//对顺序表L进行堆排序</span></div><div class="line">	<span class="keyword">int</span> i,e;</div><div class="line">	<span class="keyword">for</span>(i=L.length/<span class="number">2</span>;i&gt;<span class="number">0</span>;i--)</div><div class="line">	HeapAdjust(L,i,L.length);</div><div class="line">	<span class="keyword">for</span>(i=L.length;i&gt;<span class="number">1</span>;i--)</div><div class="line">	{</div><div class="line">		<span class="comment">//将大顶堆的顶记录和最后一个记录相互交换</span></div><div class="line">		e=L.r[<span class="number">1</span>];</div><div class="line">		L.r[<span class="number">1</span>]=L.r[i];</div><div class="line">		L.r[i]=e;</div><div class="line">		HeapAdjust(L,<span class="number">1</span>,i-<span class="number">1</span>);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+<p>下一节更新基数排序。   </p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/c/">c++</a><a href="/tags/software/">software</a><a href="/tags/sort/">sort</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/software/">software</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/06/28/select-sort/" data-title="排序算法总结（三） | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/06/29/radix-sort/" title="排序算法总结（四）">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  排序算法总结（四）</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/06/27/swap-sort/"  title="排序算法总结（二）">
+ <strong>NEXT:</strong><br/> 
+ <span>排序算法总结（二）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#直接选择排序（不稳定）"><span class="toc-number">1.</span> <span class="toc-text">直接选择排序（不稳定）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#堆排序(Heapsort)"><span class="toc-number">2.</span> <span class="toc-text">堆排序(Heapsort)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#“堆”定义"><span class="toc-number">2.1.</span> <span class="toc-text">“堆”定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#堆的高度"><span class="toc-number">2.2.</span> <span class="toc-text">堆的高度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#堆排序思想"><span class="toc-number">2.3.</span> <span class="toc-text">堆排序思想</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#特点"><span class="toc-number">2.4.</span> <span class="toc-text">特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#堆排序与直接选择排序的区别"><span class="toc-number">2.5.</span> <span class="toc-text">堆排序与直接选择排序的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#算法分析"><span class="toc-number">2.6.</span> <span class="toc-text">算法分析</span></a></li></ol></li></ol>
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

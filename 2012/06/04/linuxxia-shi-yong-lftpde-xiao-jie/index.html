@@ -1,0 +1,464 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>linux下使用lftp的小结 | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="linux下使用lftp的小结">
+    
+    <meta name="keywords" content="linux,lftp">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/06/04/linuxxia-shi-yong-lftpde-xiao-jie/" title="linux下使用lftp的小结" itemprop="url">linux下使用lftp的小结</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-06-03T23:08:00.000Z" itemprop="datePublished">Jun 4 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+		</div>
+		
+		<p>lftp的功能比较强大，相比原来用ftp，方便了很多。</p>
+<p>1、登陆：</p>
+<p>lftp ftp://yourname@site   </p>
+<p>pwd:<strong>*</strong>   </p>
+<p>或 open ftp://yourname@site   </p>
+<p><a id="more"></a><br>2、基本操作（转）<br>lftp使用介绍   </p>
+<p>lftp 是一个功能强大的下载工具，它支持访问文件的协议: ftp, ftps, http, https, hftp, fish.(其中ftps和https需要在编译的时候包含openssl库)。llftp的界面非常想一个shell: 有命令补全，历史记录，允许多个后台任务执行等功能，使用起来非常方便。它还有书签、排队、镜像、断点续传、多进程下载等功能。<br>命令行语法<br>要看lftp的命令行语法，只要在shell中输入lftp —help<br>lftp [OPTS]<br>‘lftp’是在 rc 文件执行后 lftp 执行的第一个命令<br>-f 执行文件中的命令后退出<br>-c 执行命令后退出<br>—help 显示帮助信息后退出<br>—version 显示 lftp 版本后退出<br>其他的选项同 ‘open’ 命令<br>-e 在选择后执行命令<br>-u [,] 使用指定的用户名/口令进行验证<br>-p 连接指定的端口<br>主机名, URL 或书签的名字<br>如果在命令行中输入的站点名称，lftp将直接登录站点，比如<br>ftp ftp://………….<br>如果在命令行不输入站点名称，则必须在进入到lftp界面后用open命令打开<br>[yhj@ccse-yhj yhj]$ lftp<br>lftp :~&gt; open ftp://……………….<br>常用命令   </p>
+<ul>
+<li>下载单个文件和一组文件，断点续传用-c参数<br>lftp …………….:/&gt; get -c ls-lR.txt<br>lftp ……………:/&gt; mget *.txt   </li>
+<li>镜像(反镜像即上传)一个目录，可以用多个线程并行镜像一个目录(—parallel=N)<br>lftp …………….:/&gt; mirror incoming local_name<br>lftp …………….:/&gt; mirror -R local_name<br>lftp …………….:/&gt; mirror —parallel=3 incoming local_name   </li>
+<li>多线程下载，类似网络蚂蚁的功能;缺省是5个线程<br>lftp …………….:/&gt; pget -n 4 ls-lR.txt   </li>
+<li>后台任务管理<br>缺省情况下，按 Ctrl+z,正在执行的任务将转为后台执行，也可以在命令行末尾加&amp;符号使任务在后台执行。用jobs命令可以查看所有的后台进程。用queue命令可以排队新的任务。如果退出lftp是还有任务在后台执行，lftp将转为后台执行。   </li>
+<li>其它用法<br>lftp支持类似bash的管道操作，例如用下面的命令可以将ftp服务器上的特定目录下(也可以是整个站点)所有文件的大小存到本地的文件ls.txt中<br>lftp …………….:/&gt; du incoming &gt; ls.txt<br>相关文件<br>/etc/lftp.conf<br>全局配置文件，实际位置依赖系统配置文件目录，可能在/etc，也可能在/usr/local/etc<br>~/.lftp/rc, ~/.lftprc<br>用户配置文件，将在/etc/lftp.conf之后执行，所以这里面的设置会覆盖/etc/lftp.conf中的设置。<br>lftp 缺省不会显示 ftp 服务器的欢迎信息和错误信息，这在很多时候不方便，因为你有可能想知道这个服务器到底是因为没开机连不上，还是连接数已满。如果是这样，你可以在 ~/.lftprc 里写入一行<br>debug 3<br>就可以看到出错信息了。<br>更多的配置选项请查man手册或在lftp界面内用命令 set -a 获得。<br>~/.lftp/log<br>当lftp转为后台非挂起模式执行时，输出将重定向到这里<br>~/.lftp/bookmarks<br>这是lftp存储书签的地方，可以lftp查看bookmark命令<br>~/.lftp/cwd_history<br>这个文件用来存储访问过的站点的工作目录   </li>
+</ul>
+<p>~/.lftprc<br>在用lftp访问国内一些ftp服务器时，往往看到的中文是乱码<br>^_^不用慌，这是由于服务器和本地编码不一致造成的。我们只要在主目录下新建一个文件~/.lftprc或者~/.lftp/rc<br>并在其中加入以下内容：<br>debug 3set ftp:charset GBKset file:charset UTF-8#set ftp:passtive-mode no#alias utf8 “ set ftp:charset UTF-8”#alias gbk “ set ftp:charset GBK”<br>登录ftp服务器<br>言归正传，我们先来看看怎么登录ftp服务器<br>lftp ftp://user:password@site:port<br>lftp user:password@site:port<br>lftp site -p port -u user,password<br>lftp site:port -u user,password<br>上面的几种方式都能正常工作，不过密码都是明文，这样好像不太安全哦。没关系<br>lftp user@site:port<br>系统会提示输入password，密码就回显为<strong>**</strong>了<br>不过每次都输入这么多，好麻烦哦。 如果有类似leapftp的站点管理器就好了，其实lftp早就给我们想好了： 这就是bookmark。后面我们将会看到。<br>常用命令<br>在终端运行<br>man lftp<br>或登录ftp后输入<br>help<br>就可以看到命令列表<br>下面我们看一下lftp常用的命令：<br>ls<br>显示远端文件列表(!ls 显示本地文件列表)。<br>cd<br>切换远端目录(lcd 切换本地目录)。<br>get<br>下载远端文件。<br>mget<br>下载远端文件(可以用通配符也就是 *)。<br>pget<br>使用多个线程来下载远端文件, 预设为五个。<br>mirror<br>下载/上传(mirror -R)/同步 整个目录。<br>put<br>上传文件。<br>mput<br>上传多个文件(支持通配符)。<br>mv<br>移动远端文件(远端文件改名)。<br>rm<br>删除远端文件。<br>mrm<br>删除多个远端文件(支持通配符)。<br>mkdir<br>建立远端目录。<br>rmdir<br>删除远端目录。<br>pwd<br>显示目前远端所在目录(lpwd 显示本地目录)。<br>du<br>计算远端目录的大小<br>!<br>执行本地 shell的命令(由于lftp 没有 lls, 故可用 !ls 来替代)<br>lcd<br>切换本地目录<br>lpwd<br>显示本地目录<br>alias<br>定义别名<br>bookmark<br>设定书签。<br>exit<br>退出ftp<br>快捷书签<br>补充作者：aBiNg<br>ftp中的bookmark命令，是将配置写到~/.lftp/bookmarks文件中；我们可以直接修改此文件，快速登陆ftp服务器。   </p>
+<p>3、mirror 同步镜像，备份服务器文件</p>
+<p>今天主要的问题是解决如何备份服务器端文件的问题。了解了mirror指令的用法后，发现比较适合而且好用。</p>
+<p>基本使用方法：</p>
+<p>1）、下载服务器端文件：</p>
+<p> mirror –vn RCD LCD   //RCD为远程路径，LCD为本地路径</p>
+<p>2）、上传文件：</p>
+<p> mirror –R LCD RCD</p>
+<p>下附一个自动同步的脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!bin/bash</span></div><div class="line"><span class="built_in">echo</span> “script start at  `date ”+%Y-%m-%d %H:%M:%S”</div><div class="line">HOST=”hostname”</div><div class="line">USER=”yourname”</div><div class="line">PASS=”password”</div><div class="line">LCD=”LocalePath”</div><div class="line">RCD=”RemotePath”</div><div class="line">/usr/sbin/lftp &lt;&lt; EOF</div><div class="line">open ftp://<span class="variable">$USER</span>:<span class="variable">$PASS</span>@<span class="variable">$HOST</span></div><div class="line">mirror <span class="variable">$RCD</span> <span class="variable">$LCD</span></div><div class="line">EOF</div><div class="line"><span class="built_in">echo</span> “script end at “ `date ”+%Y-%m-%d %H:%M:%S”</div></pre></td></tr></table></figure>
+
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/linux/">linux</a><a href="/tags/lftp/">lftp</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/linux/">linux</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/06/04/linuxxia-shi-yong-lftpde-xiao-jie/" data-title="linux下使用lftp的小结 | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/06/05/cannot-find-libpython/" title="解决pygments.rb (RubyPython) 找不到libpython的问题(archlinux下)">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  解决pygments.rb (RubyPython) 找不到libpython的问题(archlinux下)</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/05/31/cache--zhi-xing-wen-ti-zong-jie/"  title="cache一致性问题总结">
+ <strong>NEXT:</strong><br/> 
+ <span>cache一致性问题总结
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>

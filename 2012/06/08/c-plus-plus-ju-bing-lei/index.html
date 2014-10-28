@@ -1,0 +1,466 @@
+
+ <!DOCTYPE HTML>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  
+    <title>读C++ Primer 之句柄类 | Keen on Art of Tech</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, minimum-scale=1">
+    
+    <meta name="author" content="Will">
+    
+    <meta name="description" itemprop="description" content="C++ Primer 的句柄类总结">
+    
+    <meta name="keywords" content="c++ primer,句柄">
+    
+    
+    <link rel="alternate" href="/atom.xml" title="Keen on Art of Tech" type="application/atom+xml">
+    
+    
+    <link rel="icon" href="/img/favicon.ico">
+    
+    
+    <link rel="apple-touch-icon" href="/img/pacman.jpg">
+    <link rel="apple-touch-icon-precomposed" href="/img/pacman.jpg">
+    
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+
+</head>
+
+  <body>
+    <header>
+      <div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/logo.svg" alt="Keen on Art of Tech" title="Keen on Art of Tech"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Keen on Art of Tech">Keen on Art of Tech</a></h1>
+				<h2 class="blog-motto">Stay Hungry,Stay Foolish,Stay Patient.</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li>
+					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="text" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:blog.tinyxd.me">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2012/06/08/c-plus-plus-ju-bing-lei/" title="读C++ Primer 之句柄类" itemprop="url">读C++ Primer 之句柄类</a>
+  </h1>
+  <p class="article-author">By
+    
+      <a href="https://plus.google.com/105799035326384010000?rel=author" title="Will" target="_blank" itemprop="author">Will</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2012-06-08T12:28:00.000Z" itemprop="datePublished">Jun 8 2012</time>
+    Updated:<time datetime="2014-10-26T03:02:09.000Z" itemprop="dateModified">Oct 26 2014</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+		</div>
+		
+		<p>转自Linux社区 作者：xizero00：<a href="http://www.linuxidc.com/Linux/2011-08/40175.htm" target="_blank" rel="external">http://www.linuxidc.com/Linux/2011-08/40175.htm</a></p>
+<p>我们知道C++中最令人头疼的当属指针，如果您申请了对象却没有释放它，时间一长就会造成系统崩溃，大量的内存溢出使得您的程序的健壮性出现问题</p>
+<p>而句柄类就是为了能够解决这一问题而出现的，句柄类有点类似于智能指针。</p>
+<p>好了，废话不多说，我们来看代码<br><a id="more"></a><br>首先我们来看 sample.h文件的代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div><div class="line">121</div><div class="line">122</div><div class="line">123</div><div class="line">124</div><div class="line">125</div><div class="line">126</div><div class="line">127</div><div class="line">128</div><div class="line">129</div><div class="line">130</div><div class="line">131</div><div class="line">132</div><div class="line">133</div><div class="line">134</div><div class="line">135</div><div class="line">136</div><div class="line">137</div><div class="line">138</div><div class="line">139</div><div class="line">140</div><div class="line">141</div><div class="line">142</div><div class="line">143</div><div class="line">144</div><div class="line">145</div><div class="line">146</div><div class="line">147</div><div class="line">148</div><div class="line">149</div><div class="line">150</div><div class="line">151</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/*</span></div><div class="line">* author:xizero00</div><div class="line">* mail:xizero00@163.com</div><div class="line">* date:2011-08-07 20:11:24</div><div class="line">* Handle Class Sample  句柄类示例</div><div class="line">*/  </div><div class="line"></div><div class="line"><span class="preprocessor">#ifndef SAMPLE_H</span></div><div class="line"><span class="preprocessor">#<span class="keyword">define</span> SAMPLE_H   </span></div><div class="line"></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;iostream&gt;</span></div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdexcept&gt;</span></div><div class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;  </div><div class="line"></div><div class="line"><span class="comment">//基类</span></div><div class="line"><span class="keyword">class</span> Item_base</div><div class="line">{</div><div class="line"><span class="keyword">public</span>:</div><div class="line">    <span class="comment">//基类的虚函数,用于智能地复制对象</span></div><div class="line">    <span class="keyword">virtual</span> Item_base* clone() <span class="keyword">const</span></div><div class="line">    {</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Item_base( *<span class="keyword">this</span> );</div><div class="line">    }</div><div class="line">};  </div><div class="line"></div><div class="line"><span class="comment">//子类</span></div><div class="line"><span class="keyword">class</span> Bulk_item: <span class="keyword">public</span> Item_base</div><div class="line">{</div><div class="line">    <span class="comment">//子类的虚函数的重载,用于智能地复制对象</span></div><div class="line">    <span class="keyword">virtual</span> Bulk_item* clone() <span class="keyword">const</span></div><div class="line">    {</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Bulk_item( *<span class="keyword">this</span> );</div><div class="line">    }</div><div class="line">};  </div><div class="line"></div><div class="line"><span class="comment">//子类的子类</span></div><div class="line"><span class="keyword">class</span> Sales_item: <span class="keyword">public</span> Bulk_item</div><div class="line">{</div><div class="line"><span class="keyword">public</span>:</div><div class="line">    <span class="comment">//默认构造函数,用来初始化一个引用计数器</span></div><div class="line">    Sales_item(): p( <span class="number">0</span> ) , use( <span class="keyword">new</span> size_t( <span class="number">1</span> ) ) { <span class="built_in">cout</span> &lt;&lt; <span class="string">"Sales_item的引用计数器初始化为1"</span> &lt;&lt; endl; }  </div><div class="line"></div><div class="line">    <span class="comment">//带有一个参数的,且该参数为基类引用的构造函数</span></div><div class="line">    Sales_item( <span class="keyword">const</span> Item_base& );  </div><div class="line"></div><div class="line">    <span class="comment">//复制构造函数,需要注意的是，每复制一次就需要增加引用计数一次</span></div><div class="line">    Sales_item( <span class="keyword">const</span> Sales_item &i ): p( i.p ) , use( i.use ) { ++*use; <span class="built_in">cout</span> &lt;&lt; <span class="string">"由于采用了复制构造函数,Sales_item类型的对象引用计数为:"</span> &lt;&lt; *use &lt;&lt; endl;} <span class="comment">//也可以这样写</span></div><div class="line">    <span class="comment">//Sales_item( const Sales_item &i ): p( i.clone() ) , use( new size_t( 1 ) ) { ++*use; }   </span></div><div class="line"></div><div class="line">    <span class="comment">//析构函数,析构的时候会判断是否能够释放指针所指向的数据</span></div><div class="line">    ~Sales_item() { <span class="built_in">cout</span> &lt;&lt; <span class="string">"在析构函数中:"</span>; decr_use(); }  </div><div class="line"></div><div class="line">    <span class="comment">//赋值操作符重载</span></div><div class="line">    Sales_item& <span class="keyword">operator</span>= ( <span class="keyword">const</span> Sales_item& );  </div><div class="line"></div><div class="line">    <span class="comment">//访问操作符重载</span></div><div class="line">    <span class="keyword">const</span> Item_base* <span class="keyword">operator</span>-&gt; () <span class="keyword">const</span></div><div class="line">    {</div><div class="line">        <span class="keyword">if</span>( p )</div><div class="line">        {</div><div class="line">            <span class="keyword">return</span> p;</div><div class="line">        }</div><div class="line">        <span class="keyword">else</span></div><div class="line">        {</div><div class="line">            <span class="keyword">throw</span> logic_error( <span class="string">"p指针错误"</span> );</div><div class="line">        }</div><div class="line">    }  </div><div class="line"></div><div class="line">    <span class="comment">//解引用操作符重载</span></div><div class="line">    <span class="keyword">const</span> Item_base& <span class="keyword">operator</span>* () <span class="keyword">const</span></div><div class="line">    {</div><div class="line">        <span class="keyword">if</span>( p )</div><div class="line">        {</div><div class="line">            <span class="keyword">return</span> *p;</div><div class="line">        }</div><div class="line">        <span class="keyword">else</span></div><div class="line">        {<span class="comment">//重载虚函数,用于智能地复制对象</span></div><div class="line">            <span class="keyword">throw</span> logic_error( <span class="string">"p指针错误"</span> );</div><div class="line">        }</div><div class="line">    }  </div><div class="line"></div><div class="line">    <span class="comment">//重载虚函数,用于智能地复制对象</span></div><div class="line">    <span class="comment">/*</span></div><div class="line">    virtual Sales_item* clone() const</div><div class="line">    {</div><div class="line">        return new Sales_item( *this );</div><div class="line">    }</div><div class="line">    */  </div><div class="line"></div><div class="line"><span class="keyword">private</span>:</div><div class="line">    <span class="comment">//两个指针存储着引用计数器以及数据的指针</span></div><div class="line">    Item_base *p;</div><div class="line">    size_t *use;  </div><div class="line"></div><div class="line">    <span class="comment">//减少引用</span></div><div class="line">    <span class="keyword">void</span> decr_use()</div><div class="line">    {</div><div class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"在 dec_use函数中引用计数减少了,当前计数值为:"</span> &lt;&lt; *use - <span class="number">1</span> &lt;&lt; endl;</div><div class="line">        <span class="keyword">if</span>( --*use == <span class="number">0</span> )</div><div class="line">        {</div><div class="line">            <span class="keyword">delete</span> p;</div><div class="line">            <span class="keyword">delete</span> use;</div><div class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"在 dec_use函数中计数器减为0,释放对象"</span> &lt;&lt; endl;</div><div class="line">        }  </div><div class="line"></div><div class="line">    }</div><div class="line">};  </div><div class="line"></div><div class="line"><span class="comment">//赋值操作符重载,每次复制都会增加引用计数</span></div><div class="line">Sales_item& Sales_item::<span class="keyword">operator</span>= ( <span class="keyword">const</span> Sales_item &si )</div><div class="line">{</div><div class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"由于采用类赋值操作,"</span>;</div><div class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"被赋值的对象的引用计数为:"</span> &lt;&lt; *si.use ;</div><div class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"即将被赋值的对象的引用计数为:"</span> &lt;&lt; *use &lt;&lt; endl;</div><div class="line">    <span class="comment">//这里需要特别注意的就是待复制的对象的计数器需要加1而被赋值的对象需要减1     </span></div><div class="line"></div><div class="line">    <span class="comment">//增加被复制对象的引用计数</span></div><div class="line">    ++*si.use;</div><div class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"被赋值的对象的赋值之后的引用计数为:"</span> &lt;&lt; *si.use &lt;&lt; endl;</div><div class="line">    <span class="comment">//将即将被赋值的对象的引用计数减1</span></div><div class="line">    decr_use();</div><div class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">" 即将被赋值的对象赋值之后的引用计数为:"</span> &lt;&lt; *use &lt;&lt; endl;  </div><div class="line"></div><div class="line">    <span class="comment">//复制指针</span></div><div class="line">    p = si.p;</div><div class="line">    use = si.use;  </div><div class="line"></div><div class="line">    <span class="comment">//返回</span></div><div class="line">    <span class="keyword">return</span> *<span class="keyword">this</span>;</div><div class="line">}  </div><div class="line"></div><div class="line"><span class="preprocessor">#<span class="keyword">endif</span> <span class="comment">//SAMPLE_H</span></span></div><div class="line"></div><div class="line">接下来我们来看sample.cc的代码：</div><div class="line"></div><div class="line"><span class="comment">/*</span></div><div class="line">* author:xizero00</div><div class="line">* mail:xizero00@163.com</div><div class="line">* date:2011-08-07 20:11:24</div><div class="line">*/</div><div class="line"><span class="preprocessor">#<span class="keyword">include</span> "sample.h"</span></div><div class="line"><span class="keyword">int</span> main( <span class="keyword">int</span> argc , <span class="keyword">char</span> **argv )</div><div class="line">{</div><div class="line">    <span class="comment">//重点关注i1和i2的引用计数</span></div><div class="line">    Sales_item i1 , i2;<span class="comment">//i1和i2的引用计数分别为1</span></div><div class="line">    Sales_item i3( i1 );<span class="comment">//i1的引用计数变为2</span></div><div class="line">    Sales_item i4 = i1;<span class="comment">//i1的引用计数变为3,因为这样还是调用的复制构造函数</span></div><div class="line">    i4 = i2; <span class="comment">// i2的引用计数变为2   </span></div><div class="line"></div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>下面给出编译所需的Makefile</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor"># author:xizero00</span></div><div class="line"><span class="preprocessor"># mail:xizero00@163.com</span></div><div class="line"><span class="preprocessor"># date:2011-08-08 00:51:25</span></div><div class="line">install:</div><div class="line">    g++ <span class="keyword">sample</span>.cc -g -o <span class="keyword">sample</span></div><div class="line">    ls -al <span class="keyword">sample</span>*</div><div class="line">    ./<span class="keyword">sample</span></div><div class="line">clean:</div><div class="line">    rm -f <span class="keyword">sample</span></div><div class="line">    ls -al <span class="keyword">sample</span>*</div></pre></td></tr></table></figure>
+
+<p>注意：代码是在linux下编译，您只需要将三个文件放在同一个目录，然后在当前目录打开终端，输入make，就可以查看到结果。</p>
+<p>如果您想清理生成的文件 输入make clean即可</p>
+<p>下面是我执行的结果：</p>
+<pre><code><span class="tag">Sales_item</span>的引用计数器初始化为1
+<span class="tag">Sales_item</span>的引用计数器初始化为1
+由于采用了复制构造函数,<span class="tag">Sales_item</span>类型的对象引用计数为<span class="pseudo">:2</span>
+由于采用了复制构造函数,<span class="tag">Sales_item</span>类型的对象引用计数为<span class="pseudo">:3</span>
+由于采用类赋值操作,被赋值的对象的引用计数为<span class="pseudo">:1</span>即将被赋值的对象的引用计数为<span class="pseudo">:3</span>
+被赋值的对象的赋值之后的引用计数为<span class="pseudo">:2</span>
+在 <span class="tag">dec_use</span>函数中引用计数减少了,当前计数值为<span class="pseudo">:2</span>
+ 即将被赋值的对象赋值之后的引用计数为<span class="pseudo">:2</span>
+在析构函数中:在 <span class="tag">dec_use</span>函数中引用计数减少了,当前计数值为<span class="pseudo">:1</span>
+在析构函数中:在 <span class="tag">dec_use</span>函数中引用计数减少了,当前计数值为<span class="pseudo">:1</span>
+在析构函数中:在 <span class="tag">dec_use</span>函数中引用计数减少了,当前计数值为<span class="pseudo">:0</span>
+在 <span class="tag">dec_use</span>函数中计数器减为0,释放对象
+在析构函数中:在 <span class="tag">dec_use</span>函数中引用计数减少了,当前计数值为<span class="pseudo">:0</span>
+在 <span class="tag">dec_use</span>函数中计数器减为0,释放对象
+</code></pre><p>结论：我们可以看到，句柄类能够很方便并且能够很安全地释放内存，不会导致内存的泄露。</p>
+  
+	</div>
+		<footer class="article-footer clearfix">
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/c/">c++</a><a href="/tags/handle/">handle</a>
+  </div>
+
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/software/">software</a>
+</div>
+
+
+
+<div class="article-share" id="share">
+
+  <div data-url="http://blog.tinyxd.me/2012/06/08/c-plus-plus-ju-bing-lei/" data-title="读C++ Primer 之句柄类 | Keen on Art of Tech" data-tsina="西电小小新" class="share clearfix">
+  </div>
+
+</div>
+</footer>   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2012/06/10/qian-ru-shi-linuxying-yong-cheng-xu-zi-qi-dong/" title="嵌入式linux应用程序自启动">
+  <strong>PREVIOUS:</strong><br/>
+  <span>
+  嵌入式linux应用程序自启动</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2012/06/08/dui-he-zhan-de-qu-bie/"  title="堆和栈的区别">
+ <strong>NEXT:</strong><br/> 
+ <span>堆和栈的区别
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section class="comment">
+	<div class="ds-thread"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+  
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+			<li><a href="/categories/IT/" title="IT">IT<sup>2</sup></a></li>
+		
+			<li><a href="/categories/davinci/" title="davinci">davinci<sup>1</sup></a></li>
+		
+			<li><a href="/categories/embedded/" title="embedded">embedded<sup>2</sup></a></li>
+		
+			<li><a href="/categories/essay/" title="essay">essay<sup>6</sup></a></li>
+		
+			<li><a href="/categories/git/" title="git">git<sup>2</sup></a></li>
+		
+			<li><a href="/categories/hexo/" title="hexo">hexo<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ios/" title="ios">ios<sup>1</sup></a></li>
+		
+			<li><a href="/categories/java/" title="java">java<sup>1</sup></a></li>
+		
+			<li><a href="/categories/linux/" title="linux">linux<sup>28</sup></a></li>
+		
+			<li><a href="/categories/octopress/" title="octopress">octopress<sup>9</sup></a></li>
+		
+			<li><a href="/categories/php/" title="php">php<sup>1</sup></a></li>
+		
+			<li><a href="/categories/python/" title="python">python<sup>1</sup></a></li>
+		
+			<li><a href="/categories/ruby/" title="ruby">ruby<sup>3</sup></a></li>
+		
+			<li><a href="/categories/software/" title="software">software<sup>10</sup></a></li>
+		
+			<li><a href="/categories/vps/" title="vps">vps<sup>6</sup></a></li>
+		
+		</ul>
+</div>
+
+
+  
+  <div class="tagcloudlist">
+    <p class="asidetitle">Tag Cloud</p>
+    <div class="tagcloudlist clearfix">
+       <a href="/tags/Dynamic-space/" style="font-size: 10.00px;">Dynamic space</a><a href="/tags/Graphics-driver/" style="font-size: 10.00px;">Graphics driver</a><a href="/tags/IT/" style="font-size: 13.33px;">IT</a><a href="/tags/SDK/" style="font-size: 10.00px;">SDK</a><a href="/tags/archbang/" style="font-size: 10.00px;">archbang</a><a href="/tags/archlinux/" style="font-size: 16.67px;">archlinux</a><a href="/tags/awk/" style="font-size: 10.00px;">awk</a><a href="/tags/blog/" style="font-size: 11.67px;">blog</a><a href="/tags/c/" style="font-size: 10.00px;">c</a><a href="/tags/c/" style="font-size: 15.00px;">c++</a><a href="/tags/cache/" style="font-size: 10.00px;">cache</a><a href="/tags/codec-engine/" style="font-size: 10.00px;">codec engine</a><a href="/tags/davinci/" style="font-size: 10.00px;">davinci</a><a href="/tags/debian/" style="font-size: 13.33px;">debian</a><a href="/tags/dropbox/" style="font-size: 10.00px;">dropbox</a><a href="/tags/dsp/" style="font-size: 10.00px;">dsp</a><a href="/tags/embedded/" style="font-size: 13.33px;">embedded</a><a href="/tags/explorer/" style="font-size: 10.00px;">explorer</a><a href="/tags/flickr/" style="font-size: 10.00px;">flickr</a><a href="/tags/function/" style="font-size: 10.00px;">function</a><a href="/tags/git/" style="font-size: 11.67px;">git</a><a href="/tags/github/" style="font-size: 10.00px;">github</a><a href="/tags/handle/" style="font-size: 10.00px;">handle</a><a href="/tags/heap/" style="font-size: 10.00px;">heap</a><a href="/tags/hexo/" style="font-size: 10.00px;">hexo</a><a href="/tags/hosts/" style="font-size: 10.00px;">hosts</a><a href="/tags/inode/" style="font-size: 10.00px;">inode</a><a href="/tags/java/" style="font-size: 10.00px;">java</a><a href="/tags/job/" style="font-size: 11.67px;">job</a><a href="/tags/kernel/" style="font-size: 18.33px;">kernel</a><a href="/tags/lftp/" style="font-size: 10.00px;">lftp</a><a href="/tags/linux/" style="font-size: 20.00px;">linux</a><a href="/tags/lnmp/" style="font-size: 10.00px;">lnmp</a><a href="/tags/lxr/" style="font-size: 10.00px;">lxr</a><a href="/tags/mac/" style="font-size: 10.00px;">mac</a><a href="/tags/meta/" style="font-size: 10.00px;">meta</a><a href="/tags/mirror/" style="font-size: 10.00px;">mirror</a><a href="/tags/nginx/" style="font-size: 10.00px;">nginx</a><a href="/tags/ntfs/" style="font-size: 10.00px;">ntfs</a><a href="/tags/nvidia/" style="font-size: 10.00px;">nvidia</a>
+    </div>
+  </div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+      <li>
+       <a href="http://hexo.io" target="_blank" title="Hexo">Hexo</a>
+      </li>
+      <li>
+       <a href="http://blog.tinyxd.me/" target="_blank"> 西电小新 </a>
+      </li>
+      <li>
+       <a href="http://wiki.tinyxd.me/" target="_blank"> 小新的维基世界 </a>
+      </li>
+      <li>
+       <a href="http://www.tinyxd.me/" target="_blank"> Will的个人网站导航 </a>
+      </li>
+      <li>
+       <a href="http://www.aitinan.com/" target="_blank"> 挨踢男的那点事</a> 
+      </li>
+      <li>
+       <a href="http://www.lan-gui.com/" target="_blank"> 小C驻留地 </a>
+      </li>
+      <li>
+       <a href="http://likun.me/" target="_blank"> 独翼天使|互联网产品经理</a> 
+      </li>
+      <li>
+       <a href="http://www.medialu.com/" target="_blank"> 传媒路</a> 
+      </li>
+      <li>
+       <a href="http://www.dkjiaoyang.com/" target="_blank"> 易冷天涯</a> 
+      </li>
+      <li>
+       <a href="http://www.j927.net/" target="_blank"> 正北偏南J927</a> 
+      </li>
+      <li>
+       <a href="http://www.domyself.me/" target="_blank"> DoMyself</a> 
+      </li>
+      <li>
+       <a href="http://xfeng.me/" target="_blank"> 小峰网络遨游记</a> 
+      </li>
+      <li>
+       <a href="http://www.zhengyuanhang.com/" target="_blank"> IT足迹</a> 
+      </li>
+      <li>
+       <a href="http://youtune-xiao.com/" target="_blank"> 挨踢男|肖潇</a> 
+      </li>
+      <li>
+       <a href="http://dbank.vmall.com/" target="_blank"> 华为网盘</a> 
+      </li>
+    </ul>
+</div>
+
+
+  <div class="rsspart">
+	<a href="/atom.xml" target="_blank" title="rss">RSS</a>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/tinyxd" target="_blank" title="weibo"></a>
+		
+		
+		
+		<a href="https://github.com/tinyxd" target="_blank" title="github"></a>
+		
+		
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/A-limon/pacman" target="_blank" title="Pacman">Pacman</a> © 2014 
+		
+		<a href="http://blog.tinyxd.me" target="_blank" title="Will">Will</a>
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.1.0.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else
+    {
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      h  = $('article h2')
+      ah = $('article h2'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  if(ah.length==0){
+    t.css('display','none');
+  }else{
+    c.click(function(){
+      ta.css('display', 'block').addClass('fadeIn');
+    });
+    o.click(function(){
+      ta.css('display', 'none');
+    });
+    $(window).scroll(function(){
+      ta.css("top",Math.max(140,320-$(this).scrollTop()));
+    });
+  };
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina');
+  var html = [
+  '<a href="#" class="overlay" id="qrcode"></a>',
+  '<div class="qrcode clearfix"><span>扫描二维码分享到微信朋友圈</span><a class="qrclose" href="#share"></a><strong>Loading...Please wait</strong><img id="qrcode-pic" data-src="http://s.jiathis.com/qrcode.php?url=' + encodedUrl + '"/></div>',
+  '<a href="#textlogo" class="article-back-to-top" title="Top"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="QRcode"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="Weibo"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+  $('.article-share-qrcode').click(function(){
+    var imgSrc = $('#qrcode-pic').attr('data-src');
+    $('#qrcode-pic').attr('src', imgSrc);
+    $('#qrcode-pic').load(function(){
+        $('.qrcode strong').text(' ');
+    });
+  });
+});     
+</script>
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"tinyxd"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+  </body>
+</html>
