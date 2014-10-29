@@ -4,7 +4,7 @@
     
   <url>
     <loc>http://blog.tinyxd.me/2014/10/29/%E7%85%A7%E9%87%91%E4%B8%80%E6%97%A5%E6%B8%B8/</loc>
-    <lastmod>2014-10-29T15:03:23.000Z</lastmod>
+    <lastmod>2014-10-29T15:07:57.000Z</lastmod>
     <data>
         <display>
         <title>照金一日游</title>
@@ -12,7 +12,7 @@
         
         <tag>照金 </tag>
          
-         <content><![CDATA[<div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0936.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0936.JPG" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0939.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0939.JPG" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0951.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0951.JPG" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0954.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0954.JPG" alt=""></a><br></div>
+         <content><![CDATA[<div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0936.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0936.JPG" width="500" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0939.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0939.JPG" width="500" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0951.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0951.JPG" width="500" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0954.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0954.JPG" width="500" alt=""></a><br></div>
 ]]></content>
          
          
@@ -811,6 +811,37 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 
     
   <url>
+    <loc>http://blog.tinyxd.me/2012/06/10/qian-ru-shi-linuxying-yong-cheng-xu-zi-qi-dong/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>嵌入式linux应用程序自启动</title>
+        <pubTime>2012-06-10T11:46:00.000Z</pubTime>
+        
+        <tag>linux </tag>
+         
+        <tag>embedded </tag>
+         
+         <content><![CDATA[<p>在很多嵌入式系统中，由于可用资源较少，常常在系统启动后就直接让应用程序自动启动，以减少用户操作和节省资源。如何让自己的应用程序自动启动呢？    在Linux系统中，配置应用程序自动启动的方法有以下三种：<br><a id="more"></a></p>
+<h2 id="1-通过/Linuxrc脚本直接启动">1.通过/Linuxrc脚本直接启动</h2>
+<p>Linux内核一旦开始执行，它将通过驱动程序来初始化所有硬件设备，这个初始化过程可以在启动时的PC显示器上看到，每个驱动程序都打印一些相关信息。初始化完成后，通常调用的是init，通过loader调用init内的init=/app_program语句（通过loader向核心传入init=/program可以定制首先运行的程序）。<br>比如在桌面Linux系统中，init进程会读取/etc/inittab文件，来决定执行级别和哪些脚本和命令。嵌入式应用开发中，可以根据实际情况决定是否使用标准的init执行方式，也许这个init是个静态程序，它能够完成我们的嵌入应用的特定任务，那完全不用考虑inittab了，在这里可以采用比较灵活的措施。   </p>
+<h2 id="2-在/etc/init-d下添加启动脚本">2.在/etc/init.d下添加启动脚本</h2>
+<p>一般情况下，大多数的Linux操作系统使用/etc/init.d/(或/etc/rc.d/init.d)下的脚本来配置应用程序的自动启动。<br>例如，在某些Linux系统中，corn程序通过/etc/init.d/corn脚本启动，Apache通过/etc/init.d/httpd启动，syslogd通过/etc/init.d/syslogd启动，而sshd则通过/etc/init.d/sshd脚本启动。<br>通常这些脚本通过来自特定rc.d目录的符号链接运行。为了配置从哪个rc.d目录运行脚本，Linux系统提供了许多不同的工具，同时也可以手工进行配置。Linux系统有一个包含所有实际启动脚本文件的目录。它可能是/etc/init.d，也可能是/etc/rc.d/rc.d。同时对应每个运行级别（runlevel）又有一个另外的目录，它们可能是/etc/rc2.d，也可能是/etc/rc.d/rc2.d。这些目录中的文件通常是指向实际脚本文件的符号链接。   </p>
+<h2 id="3-直接在/etc/rc-d/rc-local脚本中添加命令">3.直接在/etc/rc.d/rc.local脚本中添加命令</h2>
+<p>在Linux系统中，有一个类似Windows系统中autoexec.bat的文件，它就是/etc/rc.d/rc.local，系统开机后自动运行用户的应用程序或启动系统服务的命令保存在开发板根文件系统的这个文件中。因此可以编辑rc.local文件，将要执行的程序（命令）添加到该文件夹中。Linux系统在启动后还未登录前，将自动执行该程序（命令），达到开机自动运行用户的应用程序的目的。<br>下面具体说明：<br>首先解压ramdisk.image.gz文件，然后挂载到系统中。接着创建自己的应用程序文件夹hello，将所要自动运行的应用程序hello复制到该文件夹。<br>然后打开/usr/etc/rc.local文件，在最后一行加入：/Myapp/hello/hello<br>再按上面的顺序将ramdisk.image打包下载到目标板，启动运行，则可以看到用户编写的应用程序一启动就运行起来了。<br>本文参考《基于ARM9的嵌入式Linux开发技术》，李新峰等编著。   </p>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="embedded" url="http://blog.tinyxd.me/categories/embedded/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.tinyxd.me/2012/06/13/han-shu-ya-zhan/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -885,37 +916,6 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
            
              
               <breadCrumb title="software" url="http://blog.tinyxd.me/categories/software/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.tinyxd.me/2012/06/10/qian-ru-shi-linuxying-yong-cheng-xu-zi-qi-dong/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>嵌入式linux应用程序自启动</title>
-        <pubTime>2012-06-10T11:46:00.000Z</pubTime>
-        
-        <tag>linux </tag>
-         
-        <tag>embedded </tag>
-         
-         <content><![CDATA[<p>在很多嵌入式系统中，由于可用资源较少，常常在系统启动后就直接让应用程序自动启动，以减少用户操作和节省资源。如何让自己的应用程序自动启动呢？    在Linux系统中，配置应用程序自动启动的方法有以下三种：<br><a id="more"></a></p>
-<h2 id="1-通过/Linuxrc脚本直接启动">1.通过/Linuxrc脚本直接启动</h2>
-<p>Linux内核一旦开始执行，它将通过驱动程序来初始化所有硬件设备，这个初始化过程可以在启动时的PC显示器上看到，每个驱动程序都打印一些相关信息。初始化完成后，通常调用的是init，通过loader调用init内的init=/app_program语句（通过loader向核心传入init=/program可以定制首先运行的程序）。<br>比如在桌面Linux系统中，init进程会读取/etc/inittab文件，来决定执行级别和哪些脚本和命令。嵌入式应用开发中，可以根据实际情况决定是否使用标准的init执行方式，也许这个init是个静态程序，它能够完成我们的嵌入应用的特定任务，那完全不用考虑inittab了，在这里可以采用比较灵活的措施。   </p>
-<h2 id="2-在/etc/init-d下添加启动脚本">2.在/etc/init.d下添加启动脚本</h2>
-<p>一般情况下，大多数的Linux操作系统使用/etc/init.d/(或/etc/rc.d/init.d)下的脚本来配置应用程序的自动启动。<br>例如，在某些Linux系统中，corn程序通过/etc/init.d/corn脚本启动，Apache通过/etc/init.d/httpd启动，syslogd通过/etc/init.d/syslogd启动，而sshd则通过/etc/init.d/sshd脚本启动。<br>通常这些脚本通过来自特定rc.d目录的符号链接运行。为了配置从哪个rc.d目录运行脚本，Linux系统提供了许多不同的工具，同时也可以手工进行配置。Linux系统有一个包含所有实际启动脚本文件的目录。它可能是/etc/init.d，也可能是/etc/rc.d/rc.d。同时对应每个运行级别（runlevel）又有一个另外的目录，它们可能是/etc/rc2.d，也可能是/etc/rc.d/rc2.d。这些目录中的文件通常是指向实际脚本文件的符号链接。   </p>
-<h2 id="3-直接在/etc/rc-d/rc-local脚本中添加命令">3.直接在/etc/rc.d/rc.local脚本中添加命令</h2>
-<p>在Linux系统中，有一个类似Windows系统中autoexec.bat的文件，它就是/etc/rc.d/rc.local，系统开机后自动运行用户的应用程序或启动系统服务的命令保存在开发板根文件系统的这个文件中。因此可以编辑rc.local文件，将要执行的程序（命令）添加到该文件夹中。Linux系统在启动后还未登录前，将自动执行该程序（命令），达到开机自动运行用户的应用程序的目的。<br>下面具体说明：<br>首先解压ramdisk.image.gz文件，然后挂载到系统中。接着创建自己的应用程序文件夹hello，将所要自动运行的应用程序hello复制到该文件夹。<br>然后打开/usr/etc/rc.local文件，在最后一行加入：/Myapp/hello/hello<br>再按上面的顺序将ramdisk.image打包下载到目标板，启动运行，则可以看到用户编写的应用程序一启动就运行起来了。<br>本文参考《基于ARM9的嵌入式Linux开发技术》，李新峰等编著。   </p>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="embedded" url="http://blog.tinyxd.me/categories/embedded/"/>
           
         </display>
     </data>
@@ -2185,6 +2185,52 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 
     
   <url>
+    <loc>http://blog.tinyxd.me/2012/07/18/linux-kernel-synchronization/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>linux内核同步</title>
+        <pubTime>2012-07-18T07:57:00.000Z</pubTime>
+        
+        <tag>linux </tag>
+         
+        <tag>kernel </tag>
+         
+         <content><![CDATA[<h2 id="内核抢占">内核抢占</h2>
+<p>抢占内核的主要特点是：一个在内核态运行的进程，可能在执行内核函数期间被另外一个进程取代。<br>只有当内核正在执行异常处理程序（尤其是系统调用），而且内核抢占没有被显式地禁用时，才可能抢占内核。<br>内核使用的各种同步技术：每CPU变量、原子操作、内存屏障、自旋锁、信号量、顺序锁、本地中断的禁止、本地软中断的禁止、读-拷贝-更新（RCU）。   </p>
+<h2 id="每CPU变量">每CPU变量</h2>
+<p>主要是数据结构的数组，系统的每个CPU对应数组的一个元素。<br>一个CPU不应该访问与其他CPU对应的数组元素。另外，它可以随意读或修改它自己的元素而不用担心出现竞争条件，因为它是唯一有资格这么做的CPU。在单处理器和多处理器系统中，内核抢占都可能使每CPU变量产生竞争条件。总的原则是内核控制路径应该在禁用抢占的情况下访问每CPU变量。   </p>
+<p><a id="more"></a></p>
+<h2 id="原子操作">原子操作</h2>
+<p>若干汇编语言指令具有“读-修改-写”类型——也就是说，它们访问存储器单元两次，第一次读原值，第二次写新值。<br>Linux内核提供了一个专门的atomic_t类型（一个原子计数器）和一些专门的函数和宏。在多处理器系统中，每条这样的指令都有一个lock字节（“锁定内存总线，直到这条指令执行完成”）的前缀。   </p>
+<h2 id="优化和内存屏障">优化和内存屏障</h2>
+<p>当使用优化的编译器时，编译器为了优化可能会重新安排汇编语言指令以便寄存器以最优的方式使用。<br>内存屏障（memory barrier）原语确保，在原语之后的操作开始执行之前，原语之前的操作已经完成。   </p>
+<h2 id="自旋锁">自旋锁</h2>
+<p>自旋锁（spin lock）是用来在多处理器环境中工作的一种特殊的锁。如果内核控制路径发现自旋锁“开着”，就获取锁并继续自己的执行。相反，如果内核控制路径发现锁由运行在另一个CPU上的内核控制路径“锁着”，就在周围“旋转”。反复执行一条紧凑的循环指令，直到锁被释放。<br>一般来说，由自旋锁所保护的每个临界区都是禁止内核抢占的。在单处理器系统上，这种锁本身并不起锁的作用，自旋锁原语仅仅是禁止或启用内核抢占。<br>在linux中，每个自旋锁都用spinlock_t结构表示，其中包含两个字段：    </p>
+<p>1.slock——表示自旋锁的状态。（1—未加锁  负数和0—加锁）<br>2.break_lock——表示进程正在忙等自旋锁（只在内核支持SMP和内核抢占的情况下使用该标志）</p>
+<p>读写自旋锁的引入是为了增加内核的并发能力。只要没有内核控制路径堆数据结构进行修改，读写自旋锁就允许多个内核控制路径读同一数据结构。允许对数据结构并发度可以提高系统性能。<br>顺序锁：与读写自旋锁非常相似，只是它为写者赋予了较高的优先级；事实上，即使在读者正在读的时候也允许写者继续运行。这种策略的好处是写者永远不会等待（除非另外一个写者正在写），缺点是有些时候读者不得不反复多次读相同的数据直到获得有效的副本。<br>当读者进入临界区时，不必禁用内核抢占；另一方面，由于写者获取自旋锁，所以它进入临界区时自动禁用内核抢占。<br>一般来说，在满足以下条件时才能使用顺序锁：   </p>
+<p>1.被保护的数据结构不包括被写者修改和被读者间接引用的指针（否则，写者可能在读者的眼鼻下就修改指针）。<br>2.读者的临界区代码没有副作用（否则，多个读者的操作会与单独的读操作有不同的结果）。   </p>
+<h2 id="读-拷贝-更新（RCU）">读-拷贝-更新（RCU）</h2>
+<p>读-拷贝-更新（RCU）是为了保护在多数情况下被多个CPU读的数据结构而设计的另一种同步技术。RCU允许多个读者和写者并发执行，RCU不使用锁，就是说它不使用被所有CPU共享的锁或计数器。<br>RCU同步的关键思想是：</p>
+<p>1.RCU只保护被动态分配并通过指针引用的数据结构。<br>2.在被RCU保护的临界区中，任何内核控制路径都不能睡眠。</p>
+<p>使用RCU技术的真正困难在于：写者修改指针时不能立即释放数据结构的旧副本。实际上，写着开始修改时，正在访问数据结构的读者可能还在读旧副本。只有在CPU上的所有（潜在的）读者都执行完宏rcu_read_unlock()之后，才可以释放旧副本。<br>RCU是Linux2.6中新加的功能，用在网络层和虚拟文件系统中。   </p>
+<h2 id="信号量">信号量</h2>
+<p>Linux提供两种信号量：</p>
+<p>1.内核信号量，由内核控制路径使用<br>2.Systerm V IPC 信号量，由用户态进程使用</p>
+<p>内核信号量：类似于自旋锁，因为当锁关闭着时，它不允许内核控制路径继续进行。只有可以睡眠的函数才能获取内核信号量；中断处理程序和可延迟函数都不能使用内核控制量。<br>内核信号量是struct semaphore类型的对象。<br>TASK_INTERRUPTIBLE是可以被信号和wake_up()唤醒的，当信号到来时，进程会被设置为可运行。<br>而TASK_UNINTERRUPTIBLE只能被wake_up()唤醒。<br>读/写信号量：类似于前面的“读写自旋锁”，有一点不同的是，在信号量再次变为打开之前，等待进程挂起而不是自旋。内核以严格的FIFO顺序处理等待读写信号量的所有进程。<br>每个读写信号量都是有rw_semaphore结构描述的。<br>补充原语（completion）：其和信号量之间的真正区别在于如何使用等待队列中包含的自旋锁。在补充原语中，自旋锁用来确保complete()和wait_for_completion()不会并发执行。在信号量中，自旋锁用于避免并发执行的down()函数弄乱信号量的数据结构。<br><br><br>本文章参考自《深入理解linux内核》。   </p>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.tinyxd.me/2012/07/25/archlinux-update-about-glibc/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -2310,52 +2356,6 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 <h2 id="与实时进程相关的系统调用_">与实时进程相关的系统调用 </h2>
 <p>sched_getscheduler()和sched_setscheduler()系统调用、sched_getparam()和sched_setparam()系统调用、sched_yield()系统调用、sched_get_priority_min()和 sched_get_priority_max()系统调用、sched_rr_get_interval()系统调用 </p>
 <p><br><br>本文章参考自《深入理解linux内核》。   </p>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.tinyxd.me/2012/07/18/linux-kernel-synchronization/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>linux内核同步</title>
-        <pubTime>2012-07-18T07:57:00.000Z</pubTime>
-        
-        <tag>linux </tag>
-         
-        <tag>kernel </tag>
-         
-         <content><![CDATA[<h2 id="内核抢占">内核抢占</h2>
-<p>抢占内核的主要特点是：一个在内核态运行的进程，可能在执行内核函数期间被另外一个进程取代。<br>只有当内核正在执行异常处理程序（尤其是系统调用），而且内核抢占没有被显式地禁用时，才可能抢占内核。<br>内核使用的各种同步技术：每CPU变量、原子操作、内存屏障、自旋锁、信号量、顺序锁、本地中断的禁止、本地软中断的禁止、读-拷贝-更新（RCU）。   </p>
-<h2 id="每CPU变量">每CPU变量</h2>
-<p>主要是数据结构的数组，系统的每个CPU对应数组的一个元素。<br>一个CPU不应该访问与其他CPU对应的数组元素。另外，它可以随意读或修改它自己的元素而不用担心出现竞争条件，因为它是唯一有资格这么做的CPU。在单处理器和多处理器系统中，内核抢占都可能使每CPU变量产生竞争条件。总的原则是内核控制路径应该在禁用抢占的情况下访问每CPU变量。   </p>
-<p><a id="more"></a></p>
-<h2 id="原子操作">原子操作</h2>
-<p>若干汇编语言指令具有“读-修改-写”类型——也就是说，它们访问存储器单元两次，第一次读原值，第二次写新值。<br>Linux内核提供了一个专门的atomic_t类型（一个原子计数器）和一些专门的函数和宏。在多处理器系统中，每条这样的指令都有一个lock字节（“锁定内存总线，直到这条指令执行完成”）的前缀。   </p>
-<h2 id="优化和内存屏障">优化和内存屏障</h2>
-<p>当使用优化的编译器时，编译器为了优化可能会重新安排汇编语言指令以便寄存器以最优的方式使用。<br>内存屏障（memory barrier）原语确保，在原语之后的操作开始执行之前，原语之前的操作已经完成。   </p>
-<h2 id="自旋锁">自旋锁</h2>
-<p>自旋锁（spin lock）是用来在多处理器环境中工作的一种特殊的锁。如果内核控制路径发现自旋锁“开着”，就获取锁并继续自己的执行。相反，如果内核控制路径发现锁由运行在另一个CPU上的内核控制路径“锁着”，就在周围“旋转”。反复执行一条紧凑的循环指令，直到锁被释放。<br>一般来说，由自旋锁所保护的每个临界区都是禁止内核抢占的。在单处理器系统上，这种锁本身并不起锁的作用，自旋锁原语仅仅是禁止或启用内核抢占。<br>在linux中，每个自旋锁都用spinlock_t结构表示，其中包含两个字段：    </p>
-<p>1.slock——表示自旋锁的状态。（1—未加锁  负数和0—加锁）<br>2.break_lock——表示进程正在忙等自旋锁（只在内核支持SMP和内核抢占的情况下使用该标志）</p>
-<p>读写自旋锁的引入是为了增加内核的并发能力。只要没有内核控制路径堆数据结构进行修改，读写自旋锁就允许多个内核控制路径读同一数据结构。允许对数据结构并发度可以提高系统性能。<br>顺序锁：与读写自旋锁非常相似，只是它为写者赋予了较高的优先级；事实上，即使在读者正在读的时候也允许写者继续运行。这种策略的好处是写者永远不会等待（除非另外一个写者正在写），缺点是有些时候读者不得不反复多次读相同的数据直到获得有效的副本。<br>当读者进入临界区时，不必禁用内核抢占；另一方面，由于写者获取自旋锁，所以它进入临界区时自动禁用内核抢占。<br>一般来说，在满足以下条件时才能使用顺序锁：   </p>
-<p>1.被保护的数据结构不包括被写者修改和被读者间接引用的指针（否则，写者可能在读者的眼鼻下就修改指针）。<br>2.读者的临界区代码没有副作用（否则，多个读者的操作会与单独的读操作有不同的结果）。   </p>
-<h2 id="读-拷贝-更新（RCU）">读-拷贝-更新（RCU）</h2>
-<p>读-拷贝-更新（RCU）是为了保护在多数情况下被多个CPU读的数据结构而设计的另一种同步技术。RCU允许多个读者和写者并发执行，RCU不使用锁，就是说它不使用被所有CPU共享的锁或计数器。<br>RCU同步的关键思想是：</p>
-<p>1.RCU只保护被动态分配并通过指针引用的数据结构。<br>2.在被RCU保护的临界区中，任何内核控制路径都不能睡眠。</p>
-<p>使用RCU技术的真正困难在于：写者修改指针时不能立即释放数据结构的旧副本。实际上，写着开始修改时，正在访问数据结构的读者可能还在读旧副本。只有在CPU上的所有（潜在的）读者都执行完宏rcu_read_unlock()之后，才可以释放旧副本。<br>RCU是Linux2.6中新加的功能，用在网络层和虚拟文件系统中。   </p>
-<h2 id="信号量">信号量</h2>
-<p>Linux提供两种信号量：</p>
-<p>1.内核信号量，由内核控制路径使用<br>2.Systerm V IPC 信号量，由用户态进程使用</p>
-<p>内核信号量：类似于自旋锁，因为当锁关闭着时，它不允许内核控制路径继续进行。只有可以睡眠的函数才能获取内核信号量；中断处理程序和可延迟函数都不能使用内核控制量。<br>内核信号量是struct semaphore类型的对象。<br>TASK_INTERRUPTIBLE是可以被信号和wake_up()唤醒的，当信号到来时，进程会被设置为可运行。<br>而TASK_UNINTERRUPTIBLE只能被wake_up()唤醒。<br>读/写信号量：类似于前面的“读写自旋锁”，有一点不同的是，在信号量再次变为打开之前，等待进程挂起而不是自旋。内核以严格的FIFO顺序处理等待读写信号量的所有进程。<br>每个读写信号量都是有rw_semaphore结构描述的。<br>补充原语（completion）：其和信号量之间的真正区别在于如何使用等待队列中包含的自旋锁。在补充原语中，自旋锁用来确保complete()和wait_for_completion()不会并发执行。在信号量中，自旋锁用于避免并发执行的down()函数弄乱信号量的数据结构。<br><br><br>本文章参考自《深入理解linux内核》。   </p>
 ]]></content>
          
          
@@ -3139,6 +3139,35 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 
     
   <url>
+    <loc>http://blog.tinyxd.me/2012/08/14/vps-lnmp-setup-and-typecho-blog/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>VPS申请及博客搭建</title>
+        <pubTime>2012-08-13T16:33:00.000Z</pubTime>
+        
+        <tag>vps </tag>
+         
+        <tag>typecho </tag>
+         
+         <content><![CDATA[<p>前些天，在网上溜达时，突然看到一款免费的vps。不错。。。免费的。。。哥当时是激动啊，对于像我这样的屌丝，有免费的当然不会放过的。<br>于是乎哥就开始折腾了。<br>一、Vps申请<br>Vps是host1free提供的（128MB,10G,无限流量），申请地址：<a href="http://www.host1free.com/free-vps/" target="_blank" rel="external">http://www.host1free.com/free-vps/</a> ，看网上说，这已经是第三次开放注册了，一共2万个。最好翻墙注册，注册时最好用Gmail邮箱，不要用qq邮箱，然后就是耐心的等待了。建议大家，真心做正规站的来申请，做采集站的（包括采集类影视、小说、淘客及黑客、成人等违反TOS和中美法律内容）绕道吧。这个免费的vps对于想学习vps搭建博客的人实属不易。<br>二、 安装lnmp<br><a id="more"></a><br>参考<a href="http://lnmp.org/install.html" target="_blank" rel="external">LNMP一键安装包</a>，其中会用到putty工具，可以到<a href="http://dl.pconline.com.cn/html_2/1/97/id=3978&amp;pn=0.html" target="_blank" rel="external">这里</a>下载。<br>按照上面的步骤进行操作。需要说明的是   </p>
+<ol>
+<li>第一条命令<code>screen –S lnmp</code>很重要，当网络突然掉线或者不小心putty被关掉时候，可以用<code>screen –r lnmp</code>看到之前lnmp所进行到的情况。对于没有screen的可以按照<a href="http://www.vpser.net/manage/run-screen-lnmp.html" target="_blank" rel="external">这里</a>进行安装。   </li>
+<li>当需要将二级域名绑定到此空间时，我所用的博客工具是typecho，当添加了虚拟主机后，进入后台出现404错误，一般出现这样的情况是nginx设置伪静态的问题，这个情况lnmp已经帮我们解决了。但是，我的仍然出现了404问题，最后把<code>/usr/local/nginx/conf/nginx.conf</code>里面的server_name 和所绑定的域名重名了。只要随便改个名字就好了。<br>三、 安装typecho<br>安装过程，<a href="http://docs.typecho.org/install" target="_blank" rel="external">官方文档</a>已经说的够详细了，这里就不再多说了。<br>四、 数据库的备份问题<br>数据备份，这个始终是个大问题。可以到<a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">这里</a>参考，也可以使用rsync来同步备份。<br>五、关于新建站点<br>至于这个新建的站点，其实想法还没有成熟，只是想分享一些互联网，linux方面的资讯，还有一些搞笑的轻松的话题。地址是：<a href="http://info.tinyxd.me" target="_blank" rel="external">http://info.tinyxd.me</a><br>ps：博客还没有取名，希望大家给点建议。<br><br><br>关于vps，lnmp比较好的文章：<br><a href="http://www.cnblogs.com/amityat/archive/2011/08/23/2150177.html" target="_blank" rel="external">LNMP一键安装升级nginx及php常用设置 SFTP管理指南</a><br><a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">VPS新手指南/教程</a><br><br></li>
+</ol>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="vps" url="http://blog.tinyxd.me/categories/vps/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.tinyxd.me/2012/08/23/archlinux-change-mac/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -3169,35 +3198,6 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
            
              
               <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.tinyxd.me/2012/08/14/vps-lnmp-setup-and-typecho-blog/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>VPS申请及博客搭建</title>
-        <pubTime>2012-08-13T16:33:00.000Z</pubTime>
-        
-        <tag>vps </tag>
-         
-        <tag>typecho </tag>
-         
-         <content><![CDATA[<p>前些天，在网上溜达时，突然看到一款免费的vps。不错。。。免费的。。。哥当时是激动啊，对于像我这样的屌丝，有免费的当然不会放过的。<br>于是乎哥就开始折腾了。<br>一、Vps申请<br>Vps是host1free提供的（128MB,10G,无限流量），申请地址：<a href="http://www.host1free.com/free-vps/" target="_blank" rel="external">http://www.host1free.com/free-vps/</a> ，看网上说，这已经是第三次开放注册了，一共2万个。最好翻墙注册，注册时最好用Gmail邮箱，不要用qq邮箱，然后就是耐心的等待了。建议大家，真心做正规站的来申请，做采集站的（包括采集类影视、小说、淘客及黑客、成人等违反TOS和中美法律内容）绕道吧。这个免费的vps对于想学习vps搭建博客的人实属不易。<br>二、 安装lnmp<br><a id="more"></a><br>参考<a href="http://lnmp.org/install.html" target="_blank" rel="external">LNMP一键安装包</a>，其中会用到putty工具，可以到<a href="http://dl.pconline.com.cn/html_2/1/97/id=3978&amp;pn=0.html" target="_blank" rel="external">这里</a>下载。<br>按照上面的步骤进行操作。需要说明的是   </p>
-<ol>
-<li>第一条命令<code>screen –S lnmp</code>很重要，当网络突然掉线或者不小心putty被关掉时候，可以用<code>screen –r lnmp</code>看到之前lnmp所进行到的情况。对于没有screen的可以按照<a href="http://www.vpser.net/manage/run-screen-lnmp.html" target="_blank" rel="external">这里</a>进行安装。   </li>
-<li>当需要将二级域名绑定到此空间时，我所用的博客工具是typecho，当添加了虚拟主机后，进入后台出现404错误，一般出现这样的情况是nginx设置伪静态的问题，这个情况lnmp已经帮我们解决了。但是，我的仍然出现了404问题，最后把<code>/usr/local/nginx/conf/nginx.conf</code>里面的server_name 和所绑定的域名重名了。只要随便改个名字就好了。<br>三、 安装typecho<br>安装过程，<a href="http://docs.typecho.org/install" target="_blank" rel="external">官方文档</a>已经说的够详细了，这里就不再多说了。<br>四、 数据库的备份问题<br>数据备份，这个始终是个大问题。可以到<a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">这里</a>参考，也可以使用rsync来同步备份。<br>五、关于新建站点<br>至于这个新建的站点，其实想法还没有成熟，只是想分享一些互联网，linux方面的资讯，还有一些搞笑的轻松的话题。地址是：<a href="http://info.tinyxd.me" target="_blank" rel="external">http://info.tinyxd.me</a><br>ps：博客还没有取名，希望大家给点建议。<br><br><br>关于vps，lnmp比较好的文章：<br><a href="http://www.cnblogs.com/amityat/archive/2011/08/23/2150177.html" target="_blank" rel="external">LNMP一键安装升级nginx及php常用设置 SFTP管理指南</a><br><a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">VPS新手指南/教程</a><br><br></li>
-</ol>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="vps" url="http://blog.tinyxd.me/categories/vps/"/>
           
         </display>
     </data>
