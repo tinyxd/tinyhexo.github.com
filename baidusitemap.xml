@@ -3,6 +3,29 @@
 
     
   <url>
+    <loc>http://blog.tinyxd.me/2014/10/29/%E7%85%A7%E9%87%91%E4%B8%80%E6%97%A5%E6%B8%B8/</loc>
+    <lastmod>2014-10-29T15:03:23.000Z</lastmod>
+    <data>
+        <display>
+        <title>照金一日游</title>
+        <pubTime>2014-10-29T13:27:12.000Z</pubTime>
+        
+        <tag>照金 </tag>
+         
+         <content><![CDATA[<div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0936.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0936.JPG" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0939.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0939.JPG" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0951.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0951.JPG" alt=""></a><br></div><br><div class="hidden"><br><a class="fancybox-button" rel="external" href="http://photo-tiny.qiniudn.com/IMG_0954.JPG" target="_blank"><img src="http://photo-tiny.qiniudn.com/IMG_0954.JPG" alt=""></a><br></div>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="Life" url="http://blog.tinyxd.me/categories/Life/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://blog.tinyxd.me/2014/10/26/octopress%E8%BF%81%E7%A7%BBhexo/</loc>
     <lastmod>2014-10-28T14:25:57.000Z</lastmod>
     <data>
@@ -78,8 +101,6 @@
     </data>
     </url>
 
-    
-    
     
     
     
@@ -175,6 +196,159 @@ javac <span class="number">1.7</span>.<span class="number">0</span>_01
            
              
               <breadCrumb title="java" url="http://blog.tinyxd.me/categories/java/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.tinyxd.me/2012/05/26/arch-linux-xia-lxrde-an-zhuang/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>arch linux 下lxr的安装</title>
+        <pubTime>2012-05-26T15:14:00.000Z</pubTime>
+        
+        <tag>linux </tag>
+         
+        <tag>archlinux </tag>
+         
+        <tag>lxr </tag>
+         
+         <content><![CDATA[<p>经过自己两天的折腾，参考了好几个资料终于搞定。<br>参考资料见文章末尾。<br>LXR是使用WEB方式下的源代码整理浏览工具，最大的用途在于清理出了代码中函数、变量的定义、说明、应用的关系，并用链接的形式表现在网页上。LXR整理出代码的结构和调用关系，存在数据库中，并在显示时与源代码树结合，从功能上说，包括代码浏览、标识符搜索、文本搜索和文件搜索，其中的文本搜索和文件搜索利用的是第三方工具（即glimpse或swish-e）（我使用的glimpse）。它的主要组成部分包括三个：Perl编写的网页/CGI部分，基于MySQL的索引数据管理（新版本才有）和通用的文本搜索工具。目前的版本，采用Glimpse或者Swish-e中的一种作为通用文本搜索工具。在安装上，基本上也按照这三个部分来配置。    </p>
+<p>1.下载安装所需的工具。<br>a。glimpse（<a href="http://webglimpse.net/download.php）" target="_blank" rel="external">http://webglimpse.net/download.php）</a></p>
+<p>安装glimpse:（其中会用到flex 安装下就行了）</p>
+<pre><code><span class="variable">$ </span>./configure
+
+<span class="variable">$ </span>make
+
+<span class="variable">$ </span>sudo make install
+</code></pre><p>b。pacman -S apache php php-apache mysql</p>
+<p>c。pacman -s ctags perl-dbi perl-dbd-mysql</p>
+<p>d。安装完mysql 以root用户身份运行设置脚本</p>
+<pre><code><span class="preprocessor"># rc.d start mysqld &amp;&amp; mysql_secure_installation</span>
+</code></pre><p>然后重启 Mysql</p>
+<pre><code><span class="preprocessor"># rc.d restart mysqld</span>
+</code></pre><p>本文需要设置密码为空（后面有说明）<br><a id="more"></a><br>用mysql -p -u root</p>
+<p>登陆mysql,然后执行下面语句: set password for ‘root’@’localhost’ =password(‘’);flush privileges;e.安装Perl的Magic模块</p>
+<p>下载地址<a href="http://search.cpan.org/~knok/File-MMagic-1.27/MMagic.pm" target="_blank" rel="external">http://search.cpan.org/~knok/File-MMagic-1.27/MMagic.pm</a></p>
+<pre><code>[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# ls ChangeLog COPYING      MANIFEST MMagic.pm README.ja contrib    Makefile.PL META.yml README.en t [root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# perl Makefile.PL Checking <span class="keyword">if</span> your kit <span class="keyword">is</span> complete... Looks good Writing Makefile <span class="keyword">for</span> <span class="keyword">File</span>::MMagic [root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# ls
+ChangeLog COPYING   Makefile.PL META.yml   README.en t
+contrib    Makefile MANIFEST     MMagic.pm README.ja
+
+[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# make
+cp MMagic.pm blib/lib/<span class="keyword">File</span>/MMagic.pm
+Manifying blib/man3/<span class="keyword">File</span>::MMagic<span class="number">.3</span>pm
+[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# make install
+Installing /usr/lib/perl5/site_perl/<span class="number">5.8</span><span class="number">.8</span>/<span class="keyword">File</span>/MMagic.pm
+Installing /usr/share/man/man3/<span class="keyword">File</span>::MMagic<span class="number">.3</span>pm Writing /usr/lib/perl5/site_perl/<span class="number">5.8</span><span class="number">.8</span>/i386-linux-thread-multi/auto/<span class="keyword">File</span>/MMagic/.packlist Appending installation info <span class="keyword">to</span> /usr/lib/perl5/<span class="number">5.8</span><span class="number">.8</span>/i386-linux-thread-multi/perllocal.pod
+</code></pre><p>2.设置</p>
+<p>尽管lxr源码里有一个INSTALL文件，但不详，这里写下来我自己配置的步骤。<br>1）位置规划<br>LXR除了数据库那一部分不需要考虑存放位置以外，还有CGI/HTML部分、索引生成工具部分和</p>
+<p>所需要索引的源代码部分需要考虑，我的实践中使用的与INSTALL缺省的不同，最大的一点不同在于我</p>
+<p>将WEB部分和工具部分分离开，只允许WEB部分暴露给浏览器——主要是基于也许会更安全一些的考虑。<br>另一个不同是用符号链接而不是真正的源代码目录作为源代码部分，因为LXR索引的Linux Kernel是最常用的，</p>
+<p>而Kernel本身还被用来重编内核和升级，所以不适合完全拷贝过来。<br>本例中使用的是/usr/local/lxr目录作为LXR的根目录。 </p>
+<pre><code><span class="preprocessor">#tar zxvf lxr-0.9.1.tar.gz -C /usr/local ；将lxr解压到/usr/local/lxr下 </span>
+<span class="preprocessor">#cd /usr/local/</span>
+
+<span class="preprocessor">#mv Local.pm diff ident search source templates  #将web相关部分移到templates下  </span>
+
+<span class="preprocessor">#mv templates http                            #http目录，用于存放WEB部分  </span>
+
+<span class="preprocessor">#ln -s /usr/local/lxr/http/Local.pm /usr/lib/perl5/site_perl/ </span>
+
+<span class="preprocessor">#ln -s http/lxr.conf         #为web部分和工具部分都需要用的文件建符号连接 </span>
+<span class="preprocessor">#mv lib /usr/lib/perl5/site_perl/LXR  #将自定义的perl库文件拷贝</span>
+</code></pre><p>到perl/mod_perl使用的缺省库文件目录中 </p>
+<pre><code>#ln -s <span class="regexp">/usr/</span>lib<span class="regexp">/perl5 /</span>usr<span class="regexp">/local/</span>lib  #否则在运行时会出现Can<span class="string">'t locate LXR/Files.pm等错误 </span>
+</code></pre><p>建立源代码根目录,（当前在lxr目录）</p>
+<pre><code><span class="preprocessor">#mkdir src ；源代码部分的根 </span>
+
+并将 linux-<span class="number">2.6</span><span class="number">.39</span>的源码链接到此目录下。
+
+<span class="preprocessor">#cd src </span>
+
+mkdir glimpse 
+
+ln -s ../../../../src/linux-<span class="number">2.6</span><span class="number">.39</span> <span class="number">2.6</span><span class="number">.39</span>
+
+<span class="preprocessor">#vi versions ；编辑/usr/local/lxr/src/versions文件，内容为2.6.39，表示让lxr索引2.6.39</span>
+
+<span class="preprocessor">#cd ../../ ；回到/usr/local/lxr </span>
+</code></pre><p>2）修改lxr.conf<br>准备好了目录结构，下一步就是改写lxr.conf文件。缺省的lxr.conf已经从templates拷贝到/usr/local/lxr/http/下了，</p>
+<p>并在/usr/local/lxr/下有个连接。 注释掉所有与swish-e相关的变量定义,其余设置如下</p>
+<pre><code><span class="string">'glimpsebin'</span> =&gt; <span class="string">'/usr/local/bin/glimpse'</span>, 
+
+<span class="string">'glimpseindex'</span> =&gt; <span class="string">'/usr/local/bin/glimpseindex'</span>, 
+
+<span class="string">'ectagsbin'</span> =&gt; <span class="string">'/usr/bin/ctags'</span>, 
+
+<span class="string">'genericconf'</span> =&gt; <span class="string">'/usr/lib/perl5/site_perl/LXR/Lang/generic.conf'</span> 
+
+<span class="string">'ectagsconf'</span> =&gt; <span class="string">'/usr/lib/perl5/site_perl/LXR/Lang/ectags.conf'</span> 
+
+<span class="string">'baseurl'</span> =&gt; <span class="string">'http://192.168.1.102/lxr'</span>                 <span class="comment">#主机的IP地址 </span>
+
+<span class="string">'range'</span> =&gt; [ readfile(<span class="string">'/usr/local/lxr/src/versions'</span>) ]  
+
+<span class="string">'default'</span> =&gt; <span class="string">'2.6.39'</span>                                  <span class="comment">#缺省的代码树名 </span>
+
+<span class="comment"># Templates used for headers and footers 下所有路径均设置为绝对路径,如 </span>
+
+<span class="string">'htmlhead'</span> =&gt; <span class="string">'/usr/local/lxr/http/html-head.html'</span> 
+
+
+
+<span class="string">'sourceroot'</span> =&gt; <span class="string">'/usr/local/lxr/src'</span>       <span class="comment">#源码根目录    (注意，最后无/) </span>
+
+<span class="string">'sourcerootname'</span> =&gt; <span class="string">'Linux-$v'</span>        <span class="comment">#它将显示在缺省的最高级源码目录上 </span>
+
+<span class="string">'glimpsedir'</span> =&gt; <span class="string">'/usr/local/lxr/src/glimpse'</span>         <span class="comment">#(注意，最后无/) </span>
+</code></pre><p>3）apache的httpd.conf (/etc/httpd/conf/httpd.conf)<br>保证装了mod_perl的时候，在httpd.conf中添加以下几行： </p>
+<pre><code><span class="keyword">Alias</span> /lxr/ /usr/local/lxr/http/ 
+
+<span class="tag">&lt;Directory /usr/local/lxr/http/&gt;</span>
+
+<span class="keyword">AllowOverride</span> None
+
+<span class="keyword"><span class="common">Options</span></span> FollowSymLinks
+
+<span class="tag">&lt;Files ~  "(search|source|ident|diff|find)$"&gt;</span>
+
+<span class="keyword"><span class="common">SetHandler</span></span> perl-script
+
+<span class="keyword">PerlHandler</span> ModPerl::Registry       #注意这里不是Apache::Registry
+
+<span class="keyword"><span class="common">Options</span></span> +ExecCGI
+
+<span class="keyword">PerlOptions</span> +ParseHeaders
+
+<span class="tag">&lt;/Files&gt;</span>
+
+<span class="tag">&lt;/Directory&gt;</span> 
+</code></pre><p>表示访问/lxr就相当于访问/usr/local/lxr/http，且用perl解释search、source、ident、diff和find几个脚本，</p>
+<p>而其他的仍然当成html来使用。<br>如果没有mod_perl，可以用SetHandler cgi-script代替perl-script，一样可以用，PerlHandler就不用了。<br>4.initialize<br>1）初始化MySQL数据库 (mysql) :</p>
+<p>进入lxr目录/usr/local/lxr</p>
+<p># mysql   </p>
+<p>(反斜杠). initdb-mysql</p>
+<p>2).建glimpse索引<br>在/usr/local/lxr/src/2.6.39/下运行’find . -name “*.[chS]” -follow | glimpseindex -H . -o -F’，索引所有.c、.h、.S（汇编）文件。这个过程比较耗时，但比起下一个过程来，就小巫见大巫了。<br>3.)建identity索引 这是LXR精髓所在<br>在/usr/local/lxr/下运行’./genxref —version=2.6.39—url=<a href="http://192.168.1.102/lxr&#39;，这个过程时间比较长，其结果就是在MySQL中添东西。如果已经做过索引了，它就只关心那些修改过的或新的文件，速度就快多了。这个过程如果中断了，最好清空数据库重新来过，否则可能会有错误。" target="_blank" rel="external">http://192.168.1.102/lxr&#39;，这个过程时间比较长，其结果就是在MySQL中添东西。如果已经做过索引了，它就只关心那些修改过的或新的文件，速度就快多了。这个过程如果中断了，最好清空数据库重新来过，否则可能会有错误。</a><br>4).修改权限<br>最简单的办法就是把/usr/local/lxr/http下所有的文件都改成apache的属主。在/usr/local/lxr/下运行’chown -R apache.apache http ‘。<br>5.startup   (rc.d restart httpd;rc.d restart mysqld)<br>重启mysql和httpd，然后访问<a href="http://192.168.1.102/lxr/source/就可以了。比较奇怪的是，因为这个cgi允许用类似目录一样的形式（source/）来访问，所以，如果服务器端有更新，浏览器端仍会使用老的页面，refresh也没用。这时只有清空本地cache了。" target="_blank" rel="external">http://192.168.1.102/lxr/source/就可以了。比较奇怪的是，因为这个cgi允许用类似目录一样的形式（source/）来访问，所以，如果服务器端有更新，浏览器端仍会使用老的页面，refresh也没用。这时只有清空本地cache了。</a><br> 6.参考博客   </p>
+<p>[内核分析]LXR安装心得(0.9.3版)—-RH8.0测试通过<a href="http://www.cnblogs.com/huqingyu/archive/2005/02/19/106080.html" target="_blank" rel="external">http://www.cnblogs.com/huqingyu/archive/2005/02/19/106080.html</a></p>
+<p>利用LXR建立源代码交叉索引 【原】<a href="http://hi.baidu.com/kissdev/blog/item/6e493daf15cf33c77cd92af9.html" target="_blank" rel="external">http://hi.baidu.com/kissdev/blog/item/6e493daf15cf33c77cd92af9.html</a></p>
+<p>LXR安装过程简介(0.3版) <a href="http://blog.chinaunix.net/u1/46901/showart_397299.html" target="_blank" rel="external">http://blog.chinaunix.net/u1/46901/showart_397299.html</a></p>
+<p>高亮LXR的代码 <a href="http://mjxian.cn/wordpress/archives/lxr-syntax-highlighting.html" target="_blank" rel="external">http://mjxian.cn/wordpress/archives/lxr-syntax-highlighting.html</a></p>
+<p>mysql wiki：<a href="https://wiki.archlinux.org/index.php/MySQL_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87" target="_blank" rel="external">https://wiki.archlinux.org/index.php/MySQL_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87</a></p>
+<p>附：部分软件版本</p>
+<p>File-MMagic-1.27.tar.gz</p>
+<p>perl-dbi-1.616-2-i686.pkg.tar.xz</p>
+<p>perl-dbd-mysql-4.020-1-i686.pkg.tar.xz</p>
+<p>lxr-0.9.10.tgz</p>
+<p>glimpse-4.18.6</p>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
           
         </display>
     </data>
@@ -637,37 +811,6 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 
     
   <url>
-    <loc>http://blog.tinyxd.me/2012/06/10/qian-ru-shi-linuxying-yong-cheng-xu-zi-qi-dong/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>嵌入式linux应用程序自启动</title>
-        <pubTime>2012-06-10T11:46:00.000Z</pubTime>
-        
-        <tag>linux </tag>
-         
-        <tag>embedded </tag>
-         
-         <content><![CDATA[<p>在很多嵌入式系统中，由于可用资源较少，常常在系统启动后就直接让应用程序自动启动，以减少用户操作和节省资源。如何让自己的应用程序自动启动呢？    在Linux系统中，配置应用程序自动启动的方法有以下三种：<br><a id="more"></a></p>
-<h2 id="1-通过/Linuxrc脚本直接启动">1.通过/Linuxrc脚本直接启动</h2>
-<p>Linux内核一旦开始执行，它将通过驱动程序来初始化所有硬件设备，这个初始化过程可以在启动时的PC显示器上看到，每个驱动程序都打印一些相关信息。初始化完成后，通常调用的是init，通过loader调用init内的init=/app_program语句（通过loader向核心传入init=/program可以定制首先运行的程序）。<br>比如在桌面Linux系统中，init进程会读取/etc/inittab文件，来决定执行级别和哪些脚本和命令。嵌入式应用开发中，可以根据实际情况决定是否使用标准的init执行方式，也许这个init是个静态程序，它能够完成我们的嵌入应用的特定任务，那完全不用考虑inittab了，在这里可以采用比较灵活的措施。   </p>
-<h2 id="2-在/etc/init-d下添加启动脚本">2.在/etc/init.d下添加启动脚本</h2>
-<p>一般情况下，大多数的Linux操作系统使用/etc/init.d/(或/etc/rc.d/init.d)下的脚本来配置应用程序的自动启动。<br>例如，在某些Linux系统中，corn程序通过/etc/init.d/corn脚本启动，Apache通过/etc/init.d/httpd启动，syslogd通过/etc/init.d/syslogd启动，而sshd则通过/etc/init.d/sshd脚本启动。<br>通常这些脚本通过来自特定rc.d目录的符号链接运行。为了配置从哪个rc.d目录运行脚本，Linux系统提供了许多不同的工具，同时也可以手工进行配置。Linux系统有一个包含所有实际启动脚本文件的目录。它可能是/etc/init.d，也可能是/etc/rc.d/rc.d。同时对应每个运行级别（runlevel）又有一个另外的目录，它们可能是/etc/rc2.d，也可能是/etc/rc.d/rc2.d。这些目录中的文件通常是指向实际脚本文件的符号链接。   </p>
-<h2 id="3-直接在/etc/rc-d/rc-local脚本中添加命令">3.直接在/etc/rc.d/rc.local脚本中添加命令</h2>
-<p>在Linux系统中，有一个类似Windows系统中autoexec.bat的文件，它就是/etc/rc.d/rc.local，系统开机后自动运行用户的应用程序或启动系统服务的命令保存在开发板根文件系统的这个文件中。因此可以编辑rc.local文件，将要执行的程序（命令）添加到该文件夹中。Linux系统在启动后还未登录前，将自动执行该程序（命令），达到开机自动运行用户的应用程序的目的。<br>下面具体说明：<br>首先解压ramdisk.image.gz文件，然后挂载到系统中。接着创建自己的应用程序文件夹hello，将所要自动运行的应用程序hello复制到该文件夹。<br>然后打开/usr/etc/rc.local文件，在最后一行加入：/Myapp/hello/hello<br>再按上面的顺序将ramdisk.image打包下载到目标板，启动运行，则可以看到用户编写的应用程序一启动就运行起来了。<br>本文参考《基于ARM9的嵌入式Linux开发技术》，李新峰等编著。   </p>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="embedded" url="http://blog.tinyxd.me/categories/embedded/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://blog.tinyxd.me/2012/06/13/han-shu-ya-zhan/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -742,6 +885,37 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
            
              
               <breadCrumb title="software" url="http://blog.tinyxd.me/categories/software/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.tinyxd.me/2012/06/10/qian-ru-shi-linuxying-yong-cheng-xu-zi-qi-dong/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>嵌入式linux应用程序自启动</title>
+        <pubTime>2012-06-10T11:46:00.000Z</pubTime>
+        
+        <tag>linux </tag>
+         
+        <tag>embedded </tag>
+         
+         <content><![CDATA[<p>在很多嵌入式系统中，由于可用资源较少，常常在系统启动后就直接让应用程序自动启动，以减少用户操作和节省资源。如何让自己的应用程序自动启动呢？    在Linux系统中，配置应用程序自动启动的方法有以下三种：<br><a id="more"></a></p>
+<h2 id="1-通过/Linuxrc脚本直接启动">1.通过/Linuxrc脚本直接启动</h2>
+<p>Linux内核一旦开始执行，它将通过驱动程序来初始化所有硬件设备，这个初始化过程可以在启动时的PC显示器上看到，每个驱动程序都打印一些相关信息。初始化完成后，通常调用的是init，通过loader调用init内的init=/app_program语句（通过loader向核心传入init=/program可以定制首先运行的程序）。<br>比如在桌面Linux系统中，init进程会读取/etc/inittab文件，来决定执行级别和哪些脚本和命令。嵌入式应用开发中，可以根据实际情况决定是否使用标准的init执行方式，也许这个init是个静态程序，它能够完成我们的嵌入应用的特定任务，那完全不用考虑inittab了，在这里可以采用比较灵活的措施。   </p>
+<h2 id="2-在/etc/init-d下添加启动脚本">2.在/etc/init.d下添加启动脚本</h2>
+<p>一般情况下，大多数的Linux操作系统使用/etc/init.d/(或/etc/rc.d/init.d)下的脚本来配置应用程序的自动启动。<br>例如，在某些Linux系统中，corn程序通过/etc/init.d/corn脚本启动，Apache通过/etc/init.d/httpd启动，syslogd通过/etc/init.d/syslogd启动，而sshd则通过/etc/init.d/sshd脚本启动。<br>通常这些脚本通过来自特定rc.d目录的符号链接运行。为了配置从哪个rc.d目录运行脚本，Linux系统提供了许多不同的工具，同时也可以手工进行配置。Linux系统有一个包含所有实际启动脚本文件的目录。它可能是/etc/init.d，也可能是/etc/rc.d/rc.d。同时对应每个运行级别（runlevel）又有一个另外的目录，它们可能是/etc/rc2.d，也可能是/etc/rc.d/rc2.d。这些目录中的文件通常是指向实际脚本文件的符号链接。   </p>
+<h2 id="3-直接在/etc/rc-d/rc-local脚本中添加命令">3.直接在/etc/rc.d/rc.local脚本中添加命令</h2>
+<p>在Linux系统中，有一个类似Windows系统中autoexec.bat的文件，它就是/etc/rc.d/rc.local，系统开机后自动运行用户的应用程序或启动系统服务的命令保存在开发板根文件系统的这个文件中。因此可以编辑rc.local文件，将要执行的程序（命令）添加到该文件夹中。Linux系统在启动后还未登录前，将自动执行该程序（命令），达到开机自动运行用户的应用程序的目的。<br>下面具体说明：<br>首先解压ramdisk.image.gz文件，然后挂载到系统中。接着创建自己的应用程序文件夹hello，将所要自动运行的应用程序hello复制到该文件夹。<br>然后打开/usr/etc/rc.local文件，在最后一行加入：/Myapp/hello/hello<br>再按上面的顺序将ramdisk.image打包下载到目标板，启动运行，则可以看到用户编写的应用程序一启动就运行起来了。<br>本文参考《基于ARM9的嵌入式Linux开发技术》，李新峰等编著。   </p>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="embedded" url="http://blog.tinyxd.me/categories/embedded/"/>
           
         </display>
     </data>
@@ -1610,89 +1784,6 @@ server addres<span class="variable">s:</span> www.<span class="keyword">ruby</sp
 
     
   <url>
-    <loc>http://blog.tinyxd.me/2012/07/10/linux-filesysterm/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>linux文件系统</title>
-        <pubTime>2012-07-10T15:26:00.000Z</pubTime>
-        
-        <tag>linux </tag>
-         
-        <tag>kernel </tag>
-         
-         <content><![CDATA[<p>linux文件操作：文件操作系统调用（create、open、read、write、lseek、close）、c库文件操作（fopen、fscanf、fprintf、fread、fwrite、fseek、fclose等）。 </p>
-<p>linux文件系统：在设备驱动程序的设计中，一般会关心file和inode这两个结构体。 </p>
-<h2 id="devfs、udev、sysfs的区别：">devfs、udev、sysfs的区别：</h2>
-<p>以下内容来自<a href="http://blog.csdn.net/yeqishi/article/details/5491413" target="_blank" rel="external">devfs, sysfs, udev文件系统区别</a> 和 linux设备驱动开发详解（第二版） </p>
-<h3 id="一-devfs设备文件简略介绍(2-6版本以后内核都采用udev设备文件系统)">一.devfs设备文件简略介绍(2.6版本以后内核都采用udev设备文件系统)</h3>
-<p>devfs(设备文件系统)是由2.4内核引入的，具有如下优点： </p>
-<p>1.可以通过程序在设备初始化时在/dev目录下创建设备文件，卸载时将它删除。 </p>
-<p>2.设备驱动程序可以指定设备号,所有者,和权限位,用户空间可以修改所有者和权限位。 </p>
-<p>3.不再需要为设备驱动程序分配主设备号以及处理的次设备号，在程序可以直接给register_chrdev()传递0主设备号以动态获得可用的主设备号，并在devfs_register() 中指定次设备号。<br><a id="more"></a><br>在2.6内核以前一直使用的是 devfs，devfs挂载于/dev目录下，提供了一种类似于文件的方法来管理位于/dev目录下的所有设备，我们知道 /dev目录下的每一个文件都对应的是一个设备，至于当前该设备存在与否先且不论，而且这些特殊文件是位于根文件系统上的，在制作文件系统 的时候我们就已经建立了这些设备文件，因此通过操作这些特殊文件，可以实现与内核进行交互。但是devfs文件系统有一些缺点，例如：不确定的设备映射，有时一个设备映射的设备文件可能不同，例如我的U盘可能对应sda有可能对应sdb；没有足够的主/辅设备号，当设备过多的时候，显然这会成为一个问题；/dev目录下文件太多而且不能表示当前系统上的实际设备；命名不够灵活，不能任意指定等等。<br><br></p>
-<h3 id="二-sysfs">二.sysfs</h3>
-<p>从Fedora 2开始，在根目录下会有一个/sys目录，mount 看一下，这个目录挂装了一个sysfs的文件系统。 </p>
-<p>Linux 2.6 的内核引入了 sysfs 文件系统。sysfs 被看成是与 proc，devfs，和 devpty 同类别的文件系统。sysfs 把连接在系统上的设备和总线组织成为一个分级的文件，它们可以被从用户的空间存取到。这是被设计用来处理那些以前驻留在 /proc/ 的设备和驱动程序指定的选件以及用来处理那些以前由 devfs 提供支持的动态加载设备。在早期的 sysfs 实现中，一些驱动和应用仍然被当做老的 proc 条目。但是 sysfs 是未来的发展方向。 </p>
-<p>sysfs 被加载在 /sys/ 系统中。它所包括的目录可以使用不同的方式来治理连接在系统上的设备。/sysfs/ 中的子目录包括： </p>
-<p>/devices/ 目录这个目录包括 /css0/。它的子目录代表了所有被 Linux 内核检测到的子通道。子通道目录的命名格式是 0.0.nnnn，其中的 nnnn 是子通道的十六进制代码 (0到ffff)。子通道目录包括状态文件和其他代表实际设备的设备子目录。设备目录的格式是：0.0.xxxx，其中的 xxxx 是这个设备的单元地址。/devices/ 还包括了状态信息和设备的配置选项。 </p>
-<p>/bus/ 目录这个目录包括了 /ccw/ 和 /ccwgroup/ 两个子目录。CCW 设备可以通过使用通道命令来存取。在 /ccw/ 目录中的设备只使用一个子通道。CCW 组设备也可以通过使用通道命令来存取，但是它们的每个设备使用多于一个的子通道。比如：一个3390-3 DASD 设备使用一个子通道，但是一个 OSA 适配器的 QDIO 网络连接使用三个子通道。/ccw/ 和 /ccwgroup/ 目录都包括设备目录和驱动器目录： </p>
-<p>/devices/ 目录包括了到 /sys/devices/css0/ 目录的设备目录的符号链接。/drivers 目录包括了所有由代表当前被系统加载的设备的驱动程序的目录。zFCP 驱动程序有一个目录在这里。/driver/ 目录包括了设备驱动程序的设置和它使用的符号链接 (/sys/devices/css0/ 目录)/class/ 目录/class/ 目录包括了代表由相似功能的设备组成的组 (ttys，SCSI 磁带驱动器，网络设备…)的目录。 </p>
-<p>/block/ 目录这个目录包括了系统中的每一个块设备的目录。块设备主要是磁盘类的设备，例如 DASD，回送设备，以及软件磁盘冗余阵列设备。一个与老版本 Linux 不同的是，使用 sysfs 系统的 Linux 需要使用设备在 sysfs 中的名字来指定设备。在一个 2.4 版本的内核映像中，zFCP 驱动程序是由它的设备地址来指定的。但是在 2.6 版本的内核映像中，它的驱动程序是由 0.0.1600 来指定的。<br><br></p>
-<h3 id="三-udev设备文件详细介绍">三.udev设备文件详细介绍</h3>
-<p>   devfs 存在的主要的问题是它处理设备检测、创建和命名的方式，其中设备节点的命名可能是最严重的问题。一般可接受的方式是，如果设备名是可配置的，那么设备命名策略应该由系统管理员决定，而不是由某些开发者强制规定。devfs 文件系统还存在竞争条件(race conditions)的问题，这是它天生的设计缺陷，不对内核做彻底的修改就无法修正这个问题。 </p>
-<p>   上篇文章简单介绍sysfs文件系统，您可能想知道 sysfs 是怎么认出系统中存在的设备以及应该使用什么设备号。对于已经编入内核的驱动程序，当被内核检测到的时候，会直接在 sysfs 中注册其对象；对于编译成模块的驱动程序，当模块载入的时候才会这样做。一旦挂载了 sysfs 文件系统(挂载到 /sys)，内建的驱动程序在 sysfs 注册的数据就可以被用户空间的进程使用，并提供给 udev 以创建设备节点。 </p>
-<p>   udev 初始化脚本负责在 Linux 启动的时候创建设备节点，该脚本首先将 /sbin/udevsend 注册为热插拔事件处理程序。热插拔事件(随后将讨论)本不应该在这个阶段发生，注册 udev 只是为了以防万一。然后 udevstart 遍历 /sys 文件系统，并在 /dev 目录下创建符合描述的设备。例如，/sys/class/tty/vcs/dev 里含有”7:0”字符串，udevstart 就根据这个字符串创建主设备号为 7 、次设备号为0 的 /dev/vcs 设备。udevstart 创建的每个设备的名字和权限由 /etc/udev/rules.d/ 目录下的文件指定的规则来设置。如果 udev 找不到所创建设备的权限文件，就将其权限设置为缺省的 660 ，所有者为 root:root 。 </p>
-<p>   上面的步骤完成后，那些已经存在并且已经内建驱动的设备就可以使用了，那么以模块驱动的设备呢？ </p>
-<p>   前面我们提到了”热插拔事件处理程序”的概念，当内核检测到一个新设备连接时，内核会产生一个热插拔事件， </p>
-<p>   并在 /proc/sys/kernel/hotplug 文件里查找处理设备连接的用户空间程序。udev 初始化脚本将 udevsend 注册为该处理程序。 </p>
-<p>   当产生热插拔事件的时候，内核让 udev 在 /sys 文件系统里检测与新设备的有关信息，并为新设备在 /dev 里创建项目。 </p>
-<p>   大多数 Linux 发行版通过 /etc/modules.conf 配置文件来处理模块加载，对某个设备节点的访问导致相应的内核模块被加载。对 udev 这个方法就行不通了，因为在模块加载前，设备节点根本不存在。为了解决这个问题，在 LFS-Bootscripts 软件包里加入了 modules 启动脚本，以及 /etc/sysconfig/modules 文件。通过在 modules 文件里添加模块名，就可以在系统启动的时候加载这些模块，这样 udev 就可以检测到设备，并创建相应的设备节点了。如果插入的设备有一个驱动程序模块但是尚未加载，Hotplug 软件包就有用了，它就会响应上述的内核总线驱动热插拔事件并加载相应的模块，为其创建设备节点，这样设备就可以使用了。 </p>
-<p>   udev是一种工具，它能够根据系统中的硬件设备的状况动态更新设备文件，包括设备文件的创建，删除等。设备文件通常放在/dev目录下，使用udev 后,在/dev下面只包含系统中真实存在的设备。它于硬件平台无关的，位于用户空间，需要内核sysfs和tmpfs的支持，sysfs为udev提供设备入口和uevent通道，tmpfs为udev设备文件提供存放空间。 </p>
-<p>   显而易见<code>udev设备文件的优点</code>： </p>
-<p>   1.udev完全在用户态工作，利用设备加入或移除时内核所发送的热插拔事件。在热插拔时，设备的详细信息会由内核输出到位于/sys的sysfs文件系统。udev的设备命名策略权限控制都在用户态完成的，它利用sysfs信息来进行创建设备文件节点。 </p>
-<p>   2.udev根据系统中的硬件设备的状态动态更新设备文件，进行设备文件的创建和删除等。 </p>
-<p>   注：使用udev,/dev目录下就会只包含系统中真正存在的设备。 </p>
-<p>   注：所有在 sysfs 中显示的设备都可以由 udev 来创建节点。如果内核中增加了其它设备的支持， </p>
-<p>   udev 也就自动地可以为它们工作了。在init初始化之前，udev 可以被放入 initramfs 之中，并在每个设备被发现的时候运行。 </p>
-<p>   也可以让udev 工作在一个真的根分区被加载之后根据 /sys 的内容创建的初始 /dev 目录之中<br><br></p>
-<h3 id="四-udev和devfs设备文件的对比">四.udev和devfs设备文件的对比</h3>
-<p>1.udev能够实现所有devfs实现的功能。但udev运行在用户模式中，而devfs运行在内核中。 </p>
-<p>2.当一个并不存在的 /dev 节点被打开的时候， devfs一样自动加载驱动程序而udev确不能。 </p>
-<p>  udev设计时，是在设备被发现的时候加载模块，而不是当它被访问的时候。 </p>
-<p>  devfs这个功能对于一个配置正确的计算机是多余的。系统中所有的设备都应该产生 </p>
-<p>  hotplug 事件、加载恰当的驱动，而 udev 将会注意到这点并且为它创建对应的 </p>
-<p>  设备节点。如果你不想让所有的设备驱动停留在内存之中，应该使用其它东西来 </p>
-<p>  管理你的模块 (如脚本, modules.conf, 等等) 。 </p>
-<p>  其中devfs 用的方法导致了大量无用的 modprobe 尝试，以此程序探测设备是否存在。 </p>
-<p>  每个试探性探测都新建一个运行 modprobe 的进程，而几乎所有这些都是无用的。 </p>
-<p>3.udev是通过对内核产生的设备名增加别名的方式来达到上述目的的。前面说过，udev是用户模式程序，不会更改内核的行为。 </p>
-<p>因此，内核依然会我行我素地产生设备名如sda,sdb等。但是，udev可以根据设备的其他信息如总线（bus），生产商（vendor）等 </p>
-<p>不同来区分不同的设备，并产生设备文件。udev只要为这个设备文件取一个固定的文件名就可以解决这个问题。在后续对设备的操作中， </p>
-<p>只要引用新的设备名就可以了。但为了保证最大限度的兼容，一般来说， </p>
-<p>新设备名总是作为一个对内核自动产生的设备名的符号链接（link）来使用的。 </p>
-<p><strong>例如</strong>：内核产生了sda设备名，而根据信息，这个设备对应于是我的内置硬盘，那我就可以制定udev规则，让udev除了产生/dev/sda设备文件外，另外创建一个符号链接叫/dev/internalHD。这样，我在fstab文件中，就可以用/dev/internalHD来代替原来的 /dev/sda了。下次，由于某些原因，这个硬盘在内核中变成了sdb设备名了，那也不用着急，udev还会自动产生/dev/internalHD这个链接，并指向正确的/dev/sdb设备。所有其他的文件像fstab等都不用修改。 </p>
-<p>而在在2.6内核以前一直使用的是 devfs，devfs挂载于/dev目录下，提供了一种类似于文件的方法来管理位于/dev目录下的所有设备，但是devfs文件系统有一些缺点，例如：不确定的设备映射，有时一个设备映射的设备文件可能不同，例如我的U盘可能对应sda有可能对应sdb 。 </p>
-<p>注：可以用命令查看其中的信息，    udevinfo -a -p /sys/block/sda </p>
-<p>在此之前的设备文件管理方法（静态文件和devfs）有几个缺点： </p>
-<p><strong> 不确定的设备映射。</strong>特别是那些动态设备，比如USB设备，设备文件到实际设备的映射并不可靠和确定。举一个例子：如果你有两个USB打印机。一个可能称为 /dev/usb/lp0,另外一个便是/dev/usb/lp1。但是到底哪个是哪个并不清楚，lp0,lp1和实际的设备没有一一对应的关系，因为他可能因为发现设备的顺序，打印机本身关闭等原因而导致这种映射并不确定。理想的方式应该是：两个打印机应该采用基于他们的序列号或者其他标识信息的唯一设备文件来映射。但是静态文件和devfs都无法做到这点。 </p>
-<p><strong>没有足够的主/辅设备号。</strong>我们知道，每一个设备文件是有两个8位的数字：一个是主设备号 ，另外一个是辅设备号来分配的。这两个8位的数字加上设备类型（块设备或者字符设备）来唯一标识一个设备。不幸的是，关联这些身边的的数字并不足够。 </p>
-<p><strong>/dev目录下文件太多。</strong>一个系统采用静态设备文件关联的方式，那么这个目录下的文件必然是足够多。而同时你又不知道在你的系统上到底有那些设备文件是激活的。 </p>
-<p><strong>命名不够灵活。</strong>尽管devfs解决了以前的一些问题，但是它自身又带来了一些问题。其中一个就是命名不够灵活；你别想非常简单的就能修改设备文件的名字。缺省的devfs命令机制本身也很奇怪，他需要修改大量的配置文件和程序。; </p>
-<p><strong>内核内存使用</strong>，devfs特有的另外一个问题是，作为内核驱动模块，devfs需要消耗大量的内存，特别当系统上有大量的设备时（比如上面我们提到的系统一个上有好几千磁盘时） </p>
-<p>udev的目标是想解决上面提到的这些问题，他通采用用户空间(user-space)工具来管理/dev/目录树，他和文件系统分开。知道如何改变缺省配置能让你如何定制自己的系统，比如创建设备字符连接，改变设备文件属组，权限等。 </p>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://blog.tinyxd.me/2012/05/23/octopressan-zhuang-bi-ji/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -1815,6 +1906,58 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
            
              
               <breadCrumb title="octopress" url="http://blog.tinyxd.me/categories/octopress/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.tinyxd.me/2012/07/11/linux-workqueue/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>linux工作队列</title>
+        <pubTime>2012-07-11T15:08:00.000Z</pubTime>
+        
+        <tag>linux </tag>
+         
+        <tag>kernel </tag>
+         
+         <content><![CDATA[<h2 id="工作队列(workqueue)">工作队列(workqueue)</h2>
+<p>Linux中的Workqueue机制就是为了简化内核线程的创建。通过调用workqueue的接口就能创建内核线程。并且可以根据当前系统CPU的个数创建线程的数量，使得线程处理的事务能够并行化。 </p>
+<p>workqueue是内核中实现简单而有效的机制，他显然简化了内核daemon的创建，方便了用户的编程， </p>
+<p>尽管可延迟函数和工作队列非常相似，但是它们的区别还是很大的。主要区别在于：可延迟函数运行在中断上下文中，而工作队列中的函数运行在进程上下文中。执行可阻塞函数（例如：需要访问磁盘数据块的函数）的唯一方式是在进程上下文中运行。因为在中断上下文中不可能发生进程切换。可延迟函数和工作队列中的函数都不能访问进程的用户态地址空间。事实上，可延迟函数被执行时不可能有任何正在运行的进程。另一方面，工作队列中的函数是由内核线程来执行的，因此，根本不存在它要访问的用户态地址空间。 </p>
+<h2 id="工作队列的数据结构">工作队列的数据结构</h2>
+<p></p><p style="text-indent:2em">与工作队列相关的主要数据结构有两个：cpu_workqueue_struct和work_struct。名为workqueue_struct的描述符，包括一个有NR_CPUS个元素的数组，NR_CPUS是系统中CPU的最大数量（双核是有两个工作队列）。每个元素都是cpu_workqueue_struct类型的描述符。 </p>
+<p></p><br><a id="more"></a><p></p>
+<p>work_struct结构是对任务的抽象。在该结构中需要维护具体的任务方法，需要处理的数据，以及任务处理的时间。该结构定义如下： </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> work_struct { </div><div class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> pending;                <span class="comment">/*如果函数已经在工作队列链表中，该字段值设为1，否则设为0*/</span> </div><div class="line">        <span class="keyword">struct</span> list_head entry;                  <span class="comment">/* 将任务挂载到queue的挂载点 */</span> </div><div class="line">        <span class="keyword">void</span> (*func)(<span class="keyword">void</span> *);                   <span class="comment">/* 任务方法 */</span> </div><div class="line">        <span class="keyword">void</span> *data;                                  <span class="comment">/* 任务处理的数据*/</span> </div><div class="line">       <span class="keyword">void</span> *wq_data;                           <span class="comment">/* work的属主（通常是指向cpu_workqueue_struct描述符的父结点的指针） */</span> </div><div class="line">       strut timer_list timer;                   <span class="comment">/* 任务延时处理定时器 */</span> </div><div class="line">};</div></pre></td></tr></table></figure>
+
+<h2 id="工作队列函数">工作队列函数</h2>
+<p>当用户调用workqueue的初始化接口create_workqueue或者create_singlethread_workqueue对workqueue队列进行初始化时，内核就开始为用户分配一个workqueue对象，并且将其链到一个全局的workqueue队列中。然后Linux根据当前CPU的情况，为workqueue对象分配与CPU个数相同的cpu_workqueue_struct对象，每个cpu_workqueue_struct对象都会存在一条任务队列。紧接着，Linux为每个cpu_workqueue_struct对象分配一个内核thread，即内核daemon去处理每个队列中的任务。至此，用户调用初始化接口将workqueue初始化完毕，返回workqueue的指针。    </p>
+<p>在初始化workqueue过程中，内核需要初始化内核线程，注册的内核线程工作比较简单，就是不断的扫描对应cpu_workqueue_struct中的任务队列，从中获取一个有效任务，然后执行该任务。所以如果任务队列为空，那么内核daemon就在cpu_workqueue_struct中的等待队列上睡眠，直到有人唤醒daemon去处理任务队列.    </p>
+<p>Workqueue初始化完毕之后，将任务运行的上下文环境构建起来了，但是具体还没有可执行的任务，所以，需要定义具体的work_struct对象。然后将work_struct加入到任务队列中，Linux会唤醒daemon去处理任务。    </p>
+<p>queue_work()（封装在work_struct描述符中）把函数插入工作队列，它接收wq和work两个指针。wq指向workqueue_struct描述符，work指向work_struct描述符。queue_work（）主要执行下面的步骤：    </p>
+<p>1.检查要插入的函数是否已经在工作队列中（work-&gt;pending字段等于1），如果是就结束。 </p>
+<p>2.把work_struct描述符加到工作队列链表中，然后把work-&gt;pending置为1。 </p>
+<p>3.如果工作者线程在本地CPU的cpu_workqueue_struct描述符的more_work等待队列上睡眠，该函数唤醒这个线程。 </p>
+<h2 id="预定义工作队列">预定义工作队列</h2>
+<p>在绝大多数情况下，为了运行一个函数而创建整个工作者线程开销太大了。因此，内核引入叫做events的预定义工作队列，所有的内核开发者都可以随便使用它。预定义工作队列只是一个包含不同内核层函数和IO驱动程序的标准工作队列，它的workququq_struct描述符存放在keventd_wq数组中。 </p>
+<p>工作队列编程接口：   </p>
+<table border="1"><br><tr><br>    <th>序号</th><br>    <th>接口函数</th><br>    <th>函数说明</th><br></tr><br><tr><br>    <td>1</td><br>    <td>create_workqueue</td><br>    <td>用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。输入参数：@name：workqueue的名称</td><br></tr><br><tr><br>    <td>2</td><br>    <td>create_singlethread_workqueue</td><br>    <td>用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。输入参数：@name：workqueue的名称</td><br></tr><br><tr><br>    <td>3</td><br>    <td>destroy_workqueue</td><br>    <td>释放workqueue队列。输入参数：@ workqueue_struct：需要释放的workqueue队列指针</td><br></tr><br><tr><br>    <td>4</td><br>    <td>schedule_work</td><br>    <td>调度执行一个具体的任务，执行的任务将会被挂入Linux系统提供的workqueue——keventd_wq输入参数：@ work_struct：具体任务对象指针<br></td><br></tr><br><tr><br>    <td>5</td><br>    <td>schedule_delayed_work</td><br>    <td>延迟一定时间去执行一个具体的任务，功能与schedule_work类似，多了一个延迟时间，输入参数：@work_struct：具体任务对象指针@delay：延迟时间</td><br></tr><br><tr><br>    <td>6</td><br>    <td>queue_work</td><br>    <td>调度执行一个指定workqueue中的任务。输入参数：@ workqueue_struct：指定的workqueue指针@work_struct：具体任务对象指针</td><br></tr><br><tr><br>    <td>7</td><br>    <td>queue_delayed_work</td><br>    <td>延迟调度执行一个指定workqueue中的任务，功能与queue_work类似，输入参数多了一个delay</td><br></tr><br></table> 
+
+<p>预定义工作队列支持函数:    </p>
+<table><br><tr><br>    <td>预定义工作队列函数</td><br>    <td>等价的标准工作队列函数</td><br></tr><br><tr><br>    <td>schedule_work(w)</td><br>    <td>queue_work( keventd_wq,w)</td><br></tr><br><tr><br>    <td>schedule_delayed_work(w,d)</td><br>    <td>queue_delayed_work(keventd_wq,w,d)在任何CPU上</td><br></tr><br><tr><br>    <td>schedule_delayed_work_on(cpu,w,d)</td><br>    <td>queue_delayed_work(keventd_wq,w,d)（在某个指定的CPU上）</td><br></tr><br><tr><br>    <td>flush_scheduled_work</td><br>    <td>flush_workqueue(keventd_wq)</td><br></tr><br></table>  
+
+<p>除了一般的events队列，在linux2.6中你还会发现一些专用的工作队列。其中最重要的是快设备层使用的kblockd工作队列。 </p>
+<p>本文章整理自网络和《深入理解linux内核》。    </p>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
           
         </display>
     </data>
@@ -2042,52 +2185,6 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 
     
   <url>
-    <loc>http://blog.tinyxd.me/2012/07/18/linux-kernel-synchronization/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>linux内核同步</title>
-        <pubTime>2012-07-18T07:57:00.000Z</pubTime>
-        
-        <tag>linux </tag>
-         
-        <tag>kernel </tag>
-         
-         <content><![CDATA[<h2 id="内核抢占">内核抢占</h2>
-<p>抢占内核的主要特点是：一个在内核态运行的进程，可能在执行内核函数期间被另外一个进程取代。<br>只有当内核正在执行异常处理程序（尤其是系统调用），而且内核抢占没有被显式地禁用时，才可能抢占内核。<br>内核使用的各种同步技术：每CPU变量、原子操作、内存屏障、自旋锁、信号量、顺序锁、本地中断的禁止、本地软中断的禁止、读-拷贝-更新（RCU）。   </p>
-<h2 id="每CPU变量">每CPU变量</h2>
-<p>主要是数据结构的数组，系统的每个CPU对应数组的一个元素。<br>一个CPU不应该访问与其他CPU对应的数组元素。另外，它可以随意读或修改它自己的元素而不用担心出现竞争条件，因为它是唯一有资格这么做的CPU。在单处理器和多处理器系统中，内核抢占都可能使每CPU变量产生竞争条件。总的原则是内核控制路径应该在禁用抢占的情况下访问每CPU变量。   </p>
-<p><a id="more"></a></p>
-<h2 id="原子操作">原子操作</h2>
-<p>若干汇编语言指令具有“读-修改-写”类型——也就是说，它们访问存储器单元两次，第一次读原值，第二次写新值。<br>Linux内核提供了一个专门的atomic_t类型（一个原子计数器）和一些专门的函数和宏。在多处理器系统中，每条这样的指令都有一个lock字节（“锁定内存总线，直到这条指令执行完成”）的前缀。   </p>
-<h2 id="优化和内存屏障">优化和内存屏障</h2>
-<p>当使用优化的编译器时，编译器为了优化可能会重新安排汇编语言指令以便寄存器以最优的方式使用。<br>内存屏障（memory barrier）原语确保，在原语之后的操作开始执行之前，原语之前的操作已经完成。   </p>
-<h2 id="自旋锁">自旋锁</h2>
-<p>自旋锁（spin lock）是用来在多处理器环境中工作的一种特殊的锁。如果内核控制路径发现自旋锁“开着”，就获取锁并继续自己的执行。相反，如果内核控制路径发现锁由运行在另一个CPU上的内核控制路径“锁着”，就在周围“旋转”。反复执行一条紧凑的循环指令，直到锁被释放。<br>一般来说，由自旋锁所保护的每个临界区都是禁止内核抢占的。在单处理器系统上，这种锁本身并不起锁的作用，自旋锁原语仅仅是禁止或启用内核抢占。<br>在linux中，每个自旋锁都用spinlock_t结构表示，其中包含两个字段：    </p>
-<p>1.slock——表示自旋锁的状态。（1—未加锁  负数和0—加锁）<br>2.break_lock——表示进程正在忙等自旋锁（只在内核支持SMP和内核抢占的情况下使用该标志）</p>
-<p>读写自旋锁的引入是为了增加内核的并发能力。只要没有内核控制路径堆数据结构进行修改，读写自旋锁就允许多个内核控制路径读同一数据结构。允许对数据结构并发度可以提高系统性能。<br>顺序锁：与读写自旋锁非常相似，只是它为写者赋予了较高的优先级；事实上，即使在读者正在读的时候也允许写者继续运行。这种策略的好处是写者永远不会等待（除非另外一个写者正在写），缺点是有些时候读者不得不反复多次读相同的数据直到获得有效的副本。<br>当读者进入临界区时，不必禁用内核抢占；另一方面，由于写者获取自旋锁，所以它进入临界区时自动禁用内核抢占。<br>一般来说，在满足以下条件时才能使用顺序锁：   </p>
-<p>1.被保护的数据结构不包括被写者修改和被读者间接引用的指针（否则，写者可能在读者的眼鼻下就修改指针）。<br>2.读者的临界区代码没有副作用（否则，多个读者的操作会与单独的读操作有不同的结果）。   </p>
-<h2 id="读-拷贝-更新（RCU）">读-拷贝-更新（RCU）</h2>
-<p>读-拷贝-更新（RCU）是为了保护在多数情况下被多个CPU读的数据结构而设计的另一种同步技术。RCU允许多个读者和写者并发执行，RCU不使用锁，就是说它不使用被所有CPU共享的锁或计数器。<br>RCU同步的关键思想是：</p>
-<p>1.RCU只保护被动态分配并通过指针引用的数据结构。<br>2.在被RCU保护的临界区中，任何内核控制路径都不能睡眠。</p>
-<p>使用RCU技术的真正困难在于：写者修改指针时不能立即释放数据结构的旧副本。实际上，写着开始修改时，正在访问数据结构的读者可能还在读旧副本。只有在CPU上的所有（潜在的）读者都执行完宏rcu_read_unlock()之后，才可以释放旧副本。<br>RCU是Linux2.6中新加的功能，用在网络层和虚拟文件系统中。   </p>
-<h2 id="信号量">信号量</h2>
-<p>Linux提供两种信号量：</p>
-<p>1.内核信号量，由内核控制路径使用<br>2.Systerm V IPC 信号量，由用户态进程使用</p>
-<p>内核信号量：类似于自旋锁，因为当锁关闭着时，它不允许内核控制路径继续进行。只有可以睡眠的函数才能获取内核信号量；中断处理程序和可延迟函数都不能使用内核控制量。<br>内核信号量是struct semaphore类型的对象。<br>TASK_INTERRUPTIBLE是可以被信号和wake_up()唤醒的，当信号到来时，进程会被设置为可运行。<br>而TASK_UNINTERRUPTIBLE只能被wake_up()唤醒。<br>读/写信号量：类似于前面的“读写自旋锁”，有一点不同的是，在信号量再次变为打开之前，等待进程挂起而不是自旋。内核以严格的FIFO顺序处理等待读写信号量的所有进程。<br>每个读写信号量都是有rw_semaphore结构描述的。<br>补充原语（completion）：其和信号量之间的真正区别在于如何使用等待队列中包含的自旋锁。在补充原语中，自旋锁用来确保complete()和wait_for_completion()不会并发执行。在信号量中，自旋锁用于避免并发执行的down()函数弄乱信号量的数据结构。<br><br><br>本文章参考自《深入理解linux内核》。   </p>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://blog.tinyxd.me/2012/07/25/archlinux-update-about-glibc/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -2213,6 +2310,52 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 <h2 id="与实时进程相关的系统调用_">与实时进程相关的系统调用 </h2>
 <p>sched_getscheduler()和sched_setscheduler()系统调用、sched_getparam()和sched_setparam()系统调用、sched_yield()系统调用、sched_get_priority_min()和 sched_get_priority_max()系统调用、sched_rr_get_interval()系统调用 </p>
 <p><br><br>本文章参考自《深入理解linux内核》。   </p>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.tinyxd.me/2012/07/18/linux-kernel-synchronization/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>linux内核同步</title>
+        <pubTime>2012-07-18T07:57:00.000Z</pubTime>
+        
+        <tag>linux </tag>
+         
+        <tag>kernel </tag>
+         
+         <content><![CDATA[<h2 id="内核抢占">内核抢占</h2>
+<p>抢占内核的主要特点是：一个在内核态运行的进程，可能在执行内核函数期间被另外一个进程取代。<br>只有当内核正在执行异常处理程序（尤其是系统调用），而且内核抢占没有被显式地禁用时，才可能抢占内核。<br>内核使用的各种同步技术：每CPU变量、原子操作、内存屏障、自旋锁、信号量、顺序锁、本地中断的禁止、本地软中断的禁止、读-拷贝-更新（RCU）。   </p>
+<h2 id="每CPU变量">每CPU变量</h2>
+<p>主要是数据结构的数组，系统的每个CPU对应数组的一个元素。<br>一个CPU不应该访问与其他CPU对应的数组元素。另外，它可以随意读或修改它自己的元素而不用担心出现竞争条件，因为它是唯一有资格这么做的CPU。在单处理器和多处理器系统中，内核抢占都可能使每CPU变量产生竞争条件。总的原则是内核控制路径应该在禁用抢占的情况下访问每CPU变量。   </p>
+<p><a id="more"></a></p>
+<h2 id="原子操作">原子操作</h2>
+<p>若干汇编语言指令具有“读-修改-写”类型——也就是说，它们访问存储器单元两次，第一次读原值，第二次写新值。<br>Linux内核提供了一个专门的atomic_t类型（一个原子计数器）和一些专门的函数和宏。在多处理器系统中，每条这样的指令都有一个lock字节（“锁定内存总线，直到这条指令执行完成”）的前缀。   </p>
+<h2 id="优化和内存屏障">优化和内存屏障</h2>
+<p>当使用优化的编译器时，编译器为了优化可能会重新安排汇编语言指令以便寄存器以最优的方式使用。<br>内存屏障（memory barrier）原语确保，在原语之后的操作开始执行之前，原语之前的操作已经完成。   </p>
+<h2 id="自旋锁">自旋锁</h2>
+<p>自旋锁（spin lock）是用来在多处理器环境中工作的一种特殊的锁。如果内核控制路径发现自旋锁“开着”，就获取锁并继续自己的执行。相反，如果内核控制路径发现锁由运行在另一个CPU上的内核控制路径“锁着”，就在周围“旋转”。反复执行一条紧凑的循环指令，直到锁被释放。<br>一般来说，由自旋锁所保护的每个临界区都是禁止内核抢占的。在单处理器系统上，这种锁本身并不起锁的作用，自旋锁原语仅仅是禁止或启用内核抢占。<br>在linux中，每个自旋锁都用spinlock_t结构表示，其中包含两个字段：    </p>
+<p>1.slock——表示自旋锁的状态。（1—未加锁  负数和0—加锁）<br>2.break_lock——表示进程正在忙等自旋锁（只在内核支持SMP和内核抢占的情况下使用该标志）</p>
+<p>读写自旋锁的引入是为了增加内核的并发能力。只要没有内核控制路径堆数据结构进行修改，读写自旋锁就允许多个内核控制路径读同一数据结构。允许对数据结构并发度可以提高系统性能。<br>顺序锁：与读写自旋锁非常相似，只是它为写者赋予了较高的优先级；事实上，即使在读者正在读的时候也允许写者继续运行。这种策略的好处是写者永远不会等待（除非另外一个写者正在写），缺点是有些时候读者不得不反复多次读相同的数据直到获得有效的副本。<br>当读者进入临界区时，不必禁用内核抢占；另一方面，由于写者获取自旋锁，所以它进入临界区时自动禁用内核抢占。<br>一般来说，在满足以下条件时才能使用顺序锁：   </p>
+<p>1.被保护的数据结构不包括被写者修改和被读者间接引用的指针（否则，写者可能在读者的眼鼻下就修改指针）。<br>2.读者的临界区代码没有副作用（否则，多个读者的操作会与单独的读操作有不同的结果）。   </p>
+<h2 id="读-拷贝-更新（RCU）">读-拷贝-更新（RCU）</h2>
+<p>读-拷贝-更新（RCU）是为了保护在多数情况下被多个CPU读的数据结构而设计的另一种同步技术。RCU允许多个读者和写者并发执行，RCU不使用锁，就是说它不使用被所有CPU共享的锁或计数器。<br>RCU同步的关键思想是：</p>
+<p>1.RCU只保护被动态分配并通过指针引用的数据结构。<br>2.在被RCU保护的临界区中，任何内核控制路径都不能睡眠。</p>
+<p>使用RCU技术的真正困难在于：写者修改指针时不能立即释放数据结构的旧副本。实际上，写着开始修改时，正在访问数据结构的读者可能还在读旧副本。只有在CPU上的所有（潜在的）读者都执行完宏rcu_read_unlock()之后，才可以释放旧副本。<br>RCU是Linux2.6中新加的功能，用在网络层和虚拟文件系统中。   </p>
+<h2 id="信号量">信号量</h2>
+<p>Linux提供两种信号量：</p>
+<p>1.内核信号量，由内核控制路径使用<br>2.Systerm V IPC 信号量，由用户态进程使用</p>
+<p>内核信号量：类似于自旋锁，因为当锁关闭着时，它不允许内核控制路径继续进行。只有可以睡眠的函数才能获取内核信号量；中断处理程序和可延迟函数都不能使用内核控制量。<br>内核信号量是struct semaphore类型的对象。<br>TASK_INTERRUPTIBLE是可以被信号和wake_up()唤醒的，当信号到来时，进程会被设置为可运行。<br>而TASK_UNINTERRUPTIBLE只能被wake_up()唤醒。<br>读/写信号量：类似于前面的“读写自旋锁”，有一点不同的是，在信号量再次变为打开之前，等待进程挂起而不是自旋。内核以严格的FIFO顺序处理等待读写信号量的所有进程。<br>每个读写信号量都是有rw_semaphore结构描述的。<br>补充原语（completion）：其和信号量之间的真正区别在于如何使用等待队列中包含的自旋锁。在补充原语中，自旋锁用来确保complete()和wait_for_completion()不会并发执行。在信号量中，自旋锁用于避免并发执行的down()函数弄乱信号量的数据结构。<br><br><br>本文章参考自《深入理解linux内核》。   </p>
 ]]></content>
          
          
@@ -2996,35 +3139,6 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
 
     
   <url>
-    <loc>http://blog.tinyxd.me/2012/08/14/vps-lnmp-setup-and-typecho-blog/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>VPS申请及博客搭建</title>
-        <pubTime>2012-08-13T16:33:00.000Z</pubTime>
-        
-        <tag>vps </tag>
-         
-        <tag>typecho </tag>
-         
-         <content><![CDATA[<p>前些天，在网上溜达时，突然看到一款免费的vps。不错。。。免费的。。。哥当时是激动啊，对于像我这样的屌丝，有免费的当然不会放过的。<br>于是乎哥就开始折腾了。<br>一、Vps申请<br>Vps是host1free提供的（128MB,10G,无限流量），申请地址：<a href="http://www.host1free.com/free-vps/" target="_blank" rel="external">http://www.host1free.com/free-vps/</a> ，看网上说，这已经是第三次开放注册了，一共2万个。最好翻墙注册，注册时最好用Gmail邮箱，不要用qq邮箱，然后就是耐心的等待了。建议大家，真心做正规站的来申请，做采集站的（包括采集类影视、小说、淘客及黑客、成人等违反TOS和中美法律内容）绕道吧。这个免费的vps对于想学习vps搭建博客的人实属不易。<br>二、 安装lnmp<br><a id="more"></a><br>参考<a href="http://lnmp.org/install.html" target="_blank" rel="external">LNMP一键安装包</a>，其中会用到putty工具，可以到<a href="http://dl.pconline.com.cn/html_2/1/97/id=3978&amp;pn=0.html" target="_blank" rel="external">这里</a>下载。<br>按照上面的步骤进行操作。需要说明的是   </p>
-<ol>
-<li>第一条命令<code>screen –S lnmp</code>很重要，当网络突然掉线或者不小心putty被关掉时候，可以用<code>screen –r lnmp</code>看到之前lnmp所进行到的情况。对于没有screen的可以按照<a href="http://www.vpser.net/manage/run-screen-lnmp.html" target="_blank" rel="external">这里</a>进行安装。   </li>
-<li>当需要将二级域名绑定到此空间时，我所用的博客工具是typecho，当添加了虚拟主机后，进入后台出现404错误，一般出现这样的情况是nginx设置伪静态的问题，这个情况lnmp已经帮我们解决了。但是，我的仍然出现了404问题，最后把<code>/usr/local/nginx/conf/nginx.conf</code>里面的server_name 和所绑定的域名重名了。只要随便改个名字就好了。<br>三、 安装typecho<br>安装过程，<a href="http://docs.typecho.org/install" target="_blank" rel="external">官方文档</a>已经说的够详细了，这里就不再多说了。<br>四、 数据库的备份问题<br>数据备份，这个始终是个大问题。可以到<a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">这里</a>参考，也可以使用rsync来同步备份。<br>五、关于新建站点<br>至于这个新建的站点，其实想法还没有成熟，只是想分享一些互联网，linux方面的资讯，还有一些搞笑的轻松的话题。地址是：<a href="http://info.tinyxd.me" target="_blank" rel="external">http://info.tinyxd.me</a><br>ps：博客还没有取名，希望大家给点建议。<br><br><br>关于vps，lnmp比较好的文章：<br><a href="http://www.cnblogs.com/amityat/archive/2011/08/23/2150177.html" target="_blank" rel="external">LNMP一键安装升级nginx及php常用设置 SFTP管理指南</a><br><a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">VPS新手指南/教程</a><br><br></li>
-</ol>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="vps" url="http://blog.tinyxd.me/categories/vps/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
     <loc>http://blog.tinyxd.me/2012/08/23/archlinux-change-mac/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
@@ -3055,6 +3169,35 @@ rake watch+pow 或者rake review+<span class="method">http:</span>//<span class=
            
              
               <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.tinyxd.me/2012/08/14/vps-lnmp-setup-and-typecho-blog/</loc>
+    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
+    <data>
+        <display>
+        <title>VPS申请及博客搭建</title>
+        <pubTime>2012-08-13T16:33:00.000Z</pubTime>
+        
+        <tag>vps </tag>
+         
+        <tag>typecho </tag>
+         
+         <content><![CDATA[<p>前些天，在网上溜达时，突然看到一款免费的vps。不错。。。免费的。。。哥当时是激动啊，对于像我这样的屌丝，有免费的当然不会放过的。<br>于是乎哥就开始折腾了。<br>一、Vps申请<br>Vps是host1free提供的（128MB,10G,无限流量），申请地址：<a href="http://www.host1free.com/free-vps/" target="_blank" rel="external">http://www.host1free.com/free-vps/</a> ，看网上说，这已经是第三次开放注册了，一共2万个。最好翻墙注册，注册时最好用Gmail邮箱，不要用qq邮箱，然后就是耐心的等待了。建议大家，真心做正规站的来申请，做采集站的（包括采集类影视、小说、淘客及黑客、成人等违反TOS和中美法律内容）绕道吧。这个免费的vps对于想学习vps搭建博客的人实属不易。<br>二、 安装lnmp<br><a id="more"></a><br>参考<a href="http://lnmp.org/install.html" target="_blank" rel="external">LNMP一键安装包</a>，其中会用到putty工具，可以到<a href="http://dl.pconline.com.cn/html_2/1/97/id=3978&amp;pn=0.html" target="_blank" rel="external">这里</a>下载。<br>按照上面的步骤进行操作。需要说明的是   </p>
+<ol>
+<li>第一条命令<code>screen –S lnmp</code>很重要，当网络突然掉线或者不小心putty被关掉时候，可以用<code>screen –r lnmp</code>看到之前lnmp所进行到的情况。对于没有screen的可以按照<a href="http://www.vpser.net/manage/run-screen-lnmp.html" target="_blank" rel="external">这里</a>进行安装。   </li>
+<li>当需要将二级域名绑定到此空间时，我所用的博客工具是typecho，当添加了虚拟主机后，进入后台出现404错误，一般出现这样的情况是nginx设置伪静态的问题，这个情况lnmp已经帮我们解决了。但是，我的仍然出现了404问题，最后把<code>/usr/local/nginx/conf/nginx.conf</code>里面的server_name 和所绑定的域名重名了。只要随便改个名字就好了。<br>三、 安装typecho<br>安装过程，<a href="http://docs.typecho.org/install" target="_blank" rel="external">官方文档</a>已经说的够详细了，这里就不再多说了。<br>四、 数据库的备份问题<br>数据备份，这个始终是个大问题。可以到<a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">这里</a>参考，也可以使用rsync来同步备份。<br>五、关于新建站点<br>至于这个新建的站点，其实想法还没有成熟，只是想分享一些互联网，linux方面的资讯，还有一些搞笑的轻松的话题。地址是：<a href="http://info.tinyxd.me" target="_blank" rel="external">http://info.tinyxd.me</a><br>ps：博客还没有取名，希望大家给点建议。<br><br><br>关于vps，lnmp比较好的文章：<br><a href="http://www.cnblogs.com/amityat/archive/2011/08/23/2150177.html" target="_blank" rel="external">LNMP一键安装升级nginx及php常用设置 SFTP管理指南</a><br><a href="http://www.vpser.net/vps-howto" target="_blank" rel="external">VPS新手指南/教程</a><br><br></li>
+</ol>
+]]></content>
+         
+         
+           
+             
+              <breadCrumb title="vps" url="http://blog.tinyxd.me/categories/vps/"/>
           
         </display>
     </data>
@@ -3549,198 +3692,76 @@ git pull origin <span class="built_in">source</span>
 
     
   <url>
-    <loc>http://blog.tinyxd.me/2012/05/26/arch-linux-xia-lxrde-an-zhuang/</loc>
+    <loc>http://blog.tinyxd.me/2012/07/10/linux-filesysterm/</loc>
     <lastmod>2014-10-26T03:02:09.000Z</lastmod>
     <data>
         <display>
-        <title>arch linux 下lxr的安装</title>
-        <pubTime>2012-05-26T15:14:00.000Z</pubTime>
-        
-        <tag>linux </tag>
-         
-        <tag>archlinux </tag>
-         
-        <tag>lxr </tag>
-         
-         <content><![CDATA[<p>经过自己两天的折腾，参考了好几个资料终于搞定。<br>参考资料见文章末尾。<br>LXR是使用WEB方式下的源代码整理浏览工具，最大的用途在于清理出了代码中函数、变量的定义、说明、应用的关系，并用链接的形式表现在网页上。LXR整理出代码的结构和调用关系，存在数据库中，并在显示时与源代码树结合，从功能上说，包括代码浏览、标识符搜索、文本搜索和文件搜索，其中的文本搜索和文件搜索利用的是第三方工具（即glimpse或swish-e）（我使用的glimpse）。它的主要组成部分包括三个：Perl编写的网页/CGI部分，基于MySQL的索引数据管理（新版本才有）和通用的文本搜索工具。目前的版本，采用Glimpse或者Swish-e中的一种作为通用文本搜索工具。在安装上，基本上也按照这三个部分来配置。    </p>
-<p>1.下载安装所需的工具。<br>a。glimpse（<a href="http://webglimpse.net/download.php）" target="_blank" rel="external">http://webglimpse.net/download.php）</a></p>
-<p>安装glimpse:（其中会用到flex 安装下就行了）</p>
-<pre><code><span class="variable">$ </span>./configure
-
-<span class="variable">$ </span>make
-
-<span class="variable">$ </span>sudo make install
-</code></pre><p>b。pacman -S apache php php-apache mysql</p>
-<p>c。pacman -s ctags perl-dbi perl-dbd-mysql</p>
-<p>d。安装完mysql 以root用户身份运行设置脚本</p>
-<pre><code><span class="preprocessor"># rc.d start mysqld &amp;&amp; mysql_secure_installation</span>
-</code></pre><p>然后重启 Mysql</p>
-<pre><code><span class="preprocessor"># rc.d restart mysqld</span>
-</code></pre><p>本文需要设置密码为空（后面有说明）<br><a id="more"></a><br>用mysql -p -u root</p>
-<p>登陆mysql,然后执行下面语句: set password for ‘root’@’localhost’ =password(‘’);flush privileges;e.安装Perl的Magic模块</p>
-<p>下载地址<a href="http://search.cpan.org/~knok/File-MMagic-1.27/MMagic.pm" target="_blank" rel="external">http://search.cpan.org/~knok/File-MMagic-1.27/MMagic.pm</a></p>
-<pre><code>[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# ls ChangeLog COPYING      MANIFEST MMagic.pm README.ja contrib    Makefile.PL META.yml README.en t [root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# perl Makefile.PL Checking <span class="keyword">if</span> your kit <span class="keyword">is</span> complete... Looks good Writing Makefile <span class="keyword">for</span> <span class="keyword">File</span>::MMagic [root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# ls
-ChangeLog COPYING   Makefile.PL META.yml   README.en t
-contrib    Makefile MANIFEST     MMagic.pm README.ja
-
-[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# make
-cp MMagic.pm blib/lib/<span class="keyword">File</span>/MMagic.pm
-Manifying blib/man3/<span class="keyword">File</span>::MMagic<span class="number">.3</span>pm
-[root@localhost <span class="keyword">File</span>-MMagic-<span class="number">1.27</span>]# make install
-Installing /usr/lib/perl5/site_perl/<span class="number">5.8</span><span class="number">.8</span>/<span class="keyword">File</span>/MMagic.pm
-Installing /usr/share/man/man3/<span class="keyword">File</span>::MMagic<span class="number">.3</span>pm Writing /usr/lib/perl5/site_perl/<span class="number">5.8</span><span class="number">.8</span>/i386-linux-thread-multi/auto/<span class="keyword">File</span>/MMagic/.packlist Appending installation info <span class="keyword">to</span> /usr/lib/perl5/<span class="number">5.8</span><span class="number">.8</span>/i386-linux-thread-multi/perllocal.pod
-</code></pre><p>2.设置</p>
-<p>尽管lxr源码里有一个INSTALL文件，但不详，这里写下来我自己配置的步骤。<br>1）位置规划<br>LXR除了数据库那一部分不需要考虑存放位置以外，还有CGI/HTML部分、索引生成工具部分和</p>
-<p>所需要索引的源代码部分需要考虑，我的实践中使用的与INSTALL缺省的不同，最大的一点不同在于我</p>
-<p>将WEB部分和工具部分分离开，只允许WEB部分暴露给浏览器——主要是基于也许会更安全一些的考虑。<br>另一个不同是用符号链接而不是真正的源代码目录作为源代码部分，因为LXR索引的Linux Kernel是最常用的，</p>
-<p>而Kernel本身还被用来重编内核和升级，所以不适合完全拷贝过来。<br>本例中使用的是/usr/local/lxr目录作为LXR的根目录。 </p>
-<pre><code><span class="preprocessor">#tar zxvf lxr-0.9.1.tar.gz -C /usr/local ；将lxr解压到/usr/local/lxr下 </span>
-<span class="preprocessor">#cd /usr/local/</span>
-
-<span class="preprocessor">#mv Local.pm diff ident search source templates  #将web相关部分移到templates下  </span>
-
-<span class="preprocessor">#mv templates http                            #http目录，用于存放WEB部分  </span>
-
-<span class="preprocessor">#ln -s /usr/local/lxr/http/Local.pm /usr/lib/perl5/site_perl/ </span>
-
-<span class="preprocessor">#ln -s http/lxr.conf         #为web部分和工具部分都需要用的文件建符号连接 </span>
-<span class="preprocessor">#mv lib /usr/lib/perl5/site_perl/LXR  #将自定义的perl库文件拷贝</span>
-</code></pre><p>到perl/mod_perl使用的缺省库文件目录中 </p>
-<pre><code>#ln -s <span class="regexp">/usr/</span>lib<span class="regexp">/perl5 /</span>usr<span class="regexp">/local/</span>lib  #否则在运行时会出现Can<span class="string">'t locate LXR/Files.pm等错误 </span>
-</code></pre><p>建立源代码根目录,（当前在lxr目录）</p>
-<pre><code><span class="preprocessor">#mkdir src ；源代码部分的根 </span>
-
-并将 linux-<span class="number">2.6</span><span class="number">.39</span>的源码链接到此目录下。
-
-<span class="preprocessor">#cd src </span>
-
-mkdir glimpse 
-
-ln -s ../../../../src/linux-<span class="number">2.6</span><span class="number">.39</span> <span class="number">2.6</span><span class="number">.39</span>
-
-<span class="preprocessor">#vi versions ；编辑/usr/local/lxr/src/versions文件，内容为2.6.39，表示让lxr索引2.6.39</span>
-
-<span class="preprocessor">#cd ../../ ；回到/usr/local/lxr </span>
-</code></pre><p>2）修改lxr.conf<br>准备好了目录结构，下一步就是改写lxr.conf文件。缺省的lxr.conf已经从templates拷贝到/usr/local/lxr/http/下了，</p>
-<p>并在/usr/local/lxr/下有个连接。 注释掉所有与swish-e相关的变量定义,其余设置如下</p>
-<pre><code><span class="string">'glimpsebin'</span> =&gt; <span class="string">'/usr/local/bin/glimpse'</span>, 
-
-<span class="string">'glimpseindex'</span> =&gt; <span class="string">'/usr/local/bin/glimpseindex'</span>, 
-
-<span class="string">'ectagsbin'</span> =&gt; <span class="string">'/usr/bin/ctags'</span>, 
-
-<span class="string">'genericconf'</span> =&gt; <span class="string">'/usr/lib/perl5/site_perl/LXR/Lang/generic.conf'</span> 
-
-<span class="string">'ectagsconf'</span> =&gt; <span class="string">'/usr/lib/perl5/site_perl/LXR/Lang/ectags.conf'</span> 
-
-<span class="string">'baseurl'</span> =&gt; <span class="string">'http://192.168.1.102/lxr'</span>                 <span class="comment">#主机的IP地址 </span>
-
-<span class="string">'range'</span> =&gt; [ readfile(<span class="string">'/usr/local/lxr/src/versions'</span>) ]  
-
-<span class="string">'default'</span> =&gt; <span class="string">'2.6.39'</span>                                  <span class="comment">#缺省的代码树名 </span>
-
-<span class="comment"># Templates used for headers and footers 下所有路径均设置为绝对路径,如 </span>
-
-<span class="string">'htmlhead'</span> =&gt; <span class="string">'/usr/local/lxr/http/html-head.html'</span> 
-
-
-
-<span class="string">'sourceroot'</span> =&gt; <span class="string">'/usr/local/lxr/src'</span>       <span class="comment">#源码根目录    (注意，最后无/) </span>
-
-<span class="string">'sourcerootname'</span> =&gt; <span class="string">'Linux-$v'</span>        <span class="comment">#它将显示在缺省的最高级源码目录上 </span>
-
-<span class="string">'glimpsedir'</span> =&gt; <span class="string">'/usr/local/lxr/src/glimpse'</span>         <span class="comment">#(注意，最后无/) </span>
-</code></pre><p>3）apache的httpd.conf (/etc/httpd/conf/httpd.conf)<br>保证装了mod_perl的时候，在httpd.conf中添加以下几行： </p>
-<pre><code><span class="keyword">Alias</span> /lxr/ /usr/local/lxr/http/ 
-
-<span class="tag">&lt;Directory /usr/local/lxr/http/&gt;</span>
-
-<span class="keyword">AllowOverride</span> None
-
-<span class="keyword"><span class="common">Options</span></span> FollowSymLinks
-
-<span class="tag">&lt;Files ~  "(search|source|ident|diff|find)$"&gt;</span>
-
-<span class="keyword"><span class="common">SetHandler</span></span> perl-script
-
-<span class="keyword">PerlHandler</span> ModPerl::Registry       #注意这里不是Apache::Registry
-
-<span class="keyword"><span class="common">Options</span></span> +ExecCGI
-
-<span class="keyword">PerlOptions</span> +ParseHeaders
-
-<span class="tag">&lt;/Files&gt;</span>
-
-<span class="tag">&lt;/Directory&gt;</span> 
-</code></pre><p>表示访问/lxr就相当于访问/usr/local/lxr/http，且用perl解释search、source、ident、diff和find几个脚本，</p>
-<p>而其他的仍然当成html来使用。<br>如果没有mod_perl，可以用SetHandler cgi-script代替perl-script，一样可以用，PerlHandler就不用了。<br>4.initialize<br>1）初始化MySQL数据库 (mysql) :</p>
-<p>进入lxr目录/usr/local/lxr</p>
-<p># mysql   </p>
-<p>(反斜杠). initdb-mysql</p>
-<p>2).建glimpse索引<br>在/usr/local/lxr/src/2.6.39/下运行’find . -name “*.[chS]” -follow | glimpseindex -H . -o -F’，索引所有.c、.h、.S（汇编）文件。这个过程比较耗时，但比起下一个过程来，就小巫见大巫了。<br>3.)建identity索引 这是LXR精髓所在<br>在/usr/local/lxr/下运行’./genxref —version=2.6.39—url=<a href="http://192.168.1.102/lxr&#39;，这个过程时间比较长，其结果就是在MySQL中添东西。如果已经做过索引了，它就只关心那些修改过的或新的文件，速度就快多了。这个过程如果中断了，最好清空数据库重新来过，否则可能会有错误。" target="_blank" rel="external">http://192.168.1.102/lxr&#39;，这个过程时间比较长，其结果就是在MySQL中添东西。如果已经做过索引了，它就只关心那些修改过的或新的文件，速度就快多了。这个过程如果中断了，最好清空数据库重新来过，否则可能会有错误。</a><br>4).修改权限<br>最简单的办法就是把/usr/local/lxr/http下所有的文件都改成apache的属主。在/usr/local/lxr/下运行’chown -R apache.apache http ‘。<br>5.startup   (rc.d restart httpd;rc.d restart mysqld)<br>重启mysql和httpd，然后访问<a href="http://192.168.1.102/lxr/source/就可以了。比较奇怪的是，因为这个cgi允许用类似目录一样的形式（source/）来访问，所以，如果服务器端有更新，浏览器端仍会使用老的页面，refresh也没用。这时只有清空本地cache了。" target="_blank" rel="external">http://192.168.1.102/lxr/source/就可以了。比较奇怪的是，因为这个cgi允许用类似目录一样的形式（source/）来访问，所以，如果服务器端有更新，浏览器端仍会使用老的页面，refresh也没用。这时只有清空本地cache了。</a><br> 6.参考博客   </p>
-<p>[内核分析]LXR安装心得(0.9.3版)—-RH8.0测试通过<a href="http://www.cnblogs.com/huqingyu/archive/2005/02/19/106080.html" target="_blank" rel="external">http://www.cnblogs.com/huqingyu/archive/2005/02/19/106080.html</a></p>
-<p>利用LXR建立源代码交叉索引 【原】<a href="http://hi.baidu.com/kissdev/blog/item/6e493daf15cf33c77cd92af9.html" target="_blank" rel="external">http://hi.baidu.com/kissdev/blog/item/6e493daf15cf33c77cd92af9.html</a></p>
-<p>LXR安装过程简介(0.3版) <a href="http://blog.chinaunix.net/u1/46901/showart_397299.html" target="_blank" rel="external">http://blog.chinaunix.net/u1/46901/showart_397299.html</a></p>
-<p>高亮LXR的代码 <a href="http://mjxian.cn/wordpress/archives/lxr-syntax-highlighting.html" target="_blank" rel="external">http://mjxian.cn/wordpress/archives/lxr-syntax-highlighting.html</a></p>
-<p>mysql wiki：<a href="https://wiki.archlinux.org/index.php/MySQL_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87" target="_blank" rel="external">https://wiki.archlinux.org/index.php/MySQL_(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87</a></p>
-<p>附：部分软件版本</p>
-<p>File-MMagic-1.27.tar.gz</p>
-<p>perl-dbi-1.616-2-i686.pkg.tar.xz</p>
-<p>perl-dbd-mysql-4.020-1-i686.pkg.tar.xz</p>
-<p>lxr-0.9.10.tgz</p>
-<p>glimpse-4.18.6</p>
-]]></content>
-         
-         
-           
-             
-              <breadCrumb title="linux" url="http://blog.tinyxd.me/categories/linux/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://blog.tinyxd.me/2012/07/11/linux-workqueue/</loc>
-    <lastmod>2014-10-26T03:02:09.000Z</lastmod>
-    <data>
-        <display>
-        <title>linux工作队列</title>
-        <pubTime>2012-07-11T15:08:00.000Z</pubTime>
+        <title>linux文件系统</title>
+        <pubTime>2012-07-10T15:26:00.000Z</pubTime>
         
         <tag>linux </tag>
          
         <tag>kernel </tag>
          
-         <content><![CDATA[<h2 id="工作队列(workqueue)">工作队列(workqueue)</h2>
-<p>Linux中的Workqueue机制就是为了简化内核线程的创建。通过调用workqueue的接口就能创建内核线程。并且可以根据当前系统CPU的个数创建线程的数量，使得线程处理的事务能够并行化。 </p>
-<p>workqueue是内核中实现简单而有效的机制，他显然简化了内核daemon的创建，方便了用户的编程， </p>
-<p>尽管可延迟函数和工作队列非常相似，但是它们的区别还是很大的。主要区别在于：可延迟函数运行在中断上下文中，而工作队列中的函数运行在进程上下文中。执行可阻塞函数（例如：需要访问磁盘数据块的函数）的唯一方式是在进程上下文中运行。因为在中断上下文中不可能发生进程切换。可延迟函数和工作队列中的函数都不能访问进程的用户态地址空间。事实上，可延迟函数被执行时不可能有任何正在运行的进程。另一方面，工作队列中的函数是由内核线程来执行的，因此，根本不存在它要访问的用户态地址空间。 </p>
-<h2 id="工作队列的数据结构">工作队列的数据结构</h2>
-<p></p><p style="text-indent:2em">与工作队列相关的主要数据结构有两个：cpu_workqueue_struct和work_struct。名为workqueue_struct的描述符，包括一个有NR_CPUS个元素的数组，NR_CPUS是系统中CPU的最大数量（双核是有两个工作队列）。每个元素都是cpu_workqueue_struct类型的描述符。 </p>
-<p></p><br><a id="more"></a><p></p>
-<p>work_struct结构是对任务的抽象。在该结构中需要维护具体的任务方法，需要处理的数据，以及任务处理的时间。该结构定义如下： </p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">struct</span> work_struct { </div><div class="line">	<span class="keyword">unsigned</span> <span class="keyword">long</span> pending;                <span class="comment">/*如果函数已经在工作队列链表中，该字段值设为1，否则设为0*/</span> </div><div class="line">        <span class="keyword">struct</span> list_head entry;                  <span class="comment">/* 将任务挂载到queue的挂载点 */</span> </div><div class="line">        <span class="keyword">void</span> (*func)(<span class="keyword">void</span> *);                   <span class="comment">/* 任务方法 */</span> </div><div class="line">        <span class="keyword">void</span> *data;                                  <span class="comment">/* 任务处理的数据*/</span> </div><div class="line">       <span class="keyword">void</span> *wq_data;                           <span class="comment">/* work的属主（通常是指向cpu_workqueue_struct描述符的父结点的指针） */</span> </div><div class="line">       strut timer_list timer;                   <span class="comment">/* 任务延时处理定时器 */</span> </div><div class="line">};</div></pre></td></tr></table></figure>
-
-<h2 id="工作队列函数">工作队列函数</h2>
-<p>当用户调用workqueue的初始化接口create_workqueue或者create_singlethread_workqueue对workqueue队列进行初始化时，内核就开始为用户分配一个workqueue对象，并且将其链到一个全局的workqueue队列中。然后Linux根据当前CPU的情况，为workqueue对象分配与CPU个数相同的cpu_workqueue_struct对象，每个cpu_workqueue_struct对象都会存在一条任务队列。紧接着，Linux为每个cpu_workqueue_struct对象分配一个内核thread，即内核daemon去处理每个队列中的任务。至此，用户调用初始化接口将workqueue初始化完毕，返回workqueue的指针。    </p>
-<p>在初始化workqueue过程中，内核需要初始化内核线程，注册的内核线程工作比较简单，就是不断的扫描对应cpu_workqueue_struct中的任务队列，从中获取一个有效任务，然后执行该任务。所以如果任务队列为空，那么内核daemon就在cpu_workqueue_struct中的等待队列上睡眠，直到有人唤醒daemon去处理任务队列.    </p>
-<p>Workqueue初始化完毕之后，将任务运行的上下文环境构建起来了，但是具体还没有可执行的任务，所以，需要定义具体的work_struct对象。然后将work_struct加入到任务队列中，Linux会唤醒daemon去处理任务。    </p>
-<p>queue_work()（封装在work_struct描述符中）把函数插入工作队列，它接收wq和work两个指针。wq指向workqueue_struct描述符，work指向work_struct描述符。queue_work（）主要执行下面的步骤：    </p>
-<p>1.检查要插入的函数是否已经在工作队列中（work-&gt;pending字段等于1），如果是就结束。 </p>
-<p>2.把work_struct描述符加到工作队列链表中，然后把work-&gt;pending置为1。 </p>
-<p>3.如果工作者线程在本地CPU的cpu_workqueue_struct描述符的more_work等待队列上睡眠，该函数唤醒这个线程。 </p>
-<h2 id="预定义工作队列">预定义工作队列</h2>
-<p>在绝大多数情况下，为了运行一个函数而创建整个工作者线程开销太大了。因此，内核引入叫做events的预定义工作队列，所有的内核开发者都可以随便使用它。预定义工作队列只是一个包含不同内核层函数和IO驱动程序的标准工作队列，它的workququq_struct描述符存放在keventd_wq数组中。 </p>
-<p>工作队列编程接口：   </p>
-<table border="1"><br><tr><br>    <th>序号</th><br>    <th>接口函数</th><br>    <th>函数说明</th><br></tr><br><tr><br>    <td>1</td><br>    <td>create_workqueue</td><br>    <td>用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。输入参数：@name：workqueue的名称</td><br></tr><br><tr><br>    <td>2</td><br>    <td>create_singlethread_workqueue</td><br>    <td>用于创建一个workqueue队列，为系统中的每个CPU都创建一个内核线程。输入参数：@name：workqueue的名称</td><br></tr><br><tr><br>    <td>3</td><br>    <td>destroy_workqueue</td><br>    <td>释放workqueue队列。输入参数：@ workqueue_struct：需要释放的workqueue队列指针</td><br></tr><br><tr><br>    <td>4</td><br>    <td>schedule_work</td><br>    <td>调度执行一个具体的任务，执行的任务将会被挂入Linux系统提供的workqueue——keventd_wq输入参数：@ work_struct：具体任务对象指针<br></td><br></tr><br><tr><br>    <td>5</td><br>    <td>schedule_delayed_work</td><br>    <td>延迟一定时间去执行一个具体的任务，功能与schedule_work类似，多了一个延迟时间，输入参数：@work_struct：具体任务对象指针@delay：延迟时间</td><br></tr><br><tr><br>    <td>6</td><br>    <td>queue_work</td><br>    <td>调度执行一个指定workqueue中的任务。输入参数：@ workqueue_struct：指定的workqueue指针@work_struct：具体任务对象指针</td><br></tr><br><tr><br>    <td>7</td><br>    <td>queue_delayed_work</td><br>    <td>延迟调度执行一个指定workqueue中的任务，功能与queue_work类似，输入参数多了一个delay</td><br></tr><br></table> 
-
-<p>预定义工作队列支持函数:    </p>
-<table><br><tr><br>    <td>预定义工作队列函数</td><br>    <td>等价的标准工作队列函数</td><br></tr><br><tr><br>    <td>schedule_work(w)</td><br>    <td>queue_work( keventd_wq,w)</td><br></tr><br><tr><br>    <td>schedule_delayed_work(w,d)</td><br>    <td>queue_delayed_work(keventd_wq,w,d)在任何CPU上</td><br></tr><br><tr><br>    <td>schedule_delayed_work_on(cpu,w,d)</td><br>    <td>queue_delayed_work(keventd_wq,w,d)（在某个指定的CPU上）</td><br></tr><br><tr><br>    <td>flush_scheduled_work</td><br>    <td>flush_workqueue(keventd_wq)</td><br></tr><br></table>  
-
-<p>除了一般的events队列，在linux2.6中你还会发现一些专用的工作队列。其中最重要的是快设备层使用的kblockd工作队列。 </p>
-<p>本文章整理自网络和《深入理解linux内核》。    </p>
+         <content><![CDATA[<p>linux文件操作：文件操作系统调用（create、open、read、write、lseek、close）、c库文件操作（fopen、fscanf、fprintf、fread、fwrite、fseek、fclose等）。 </p>
+<p>linux文件系统：在设备驱动程序的设计中，一般会关心file和inode这两个结构体。 </p>
+<h2 id="devfs、udev、sysfs的区别：">devfs、udev、sysfs的区别：</h2>
+<p>以下内容来自<a href="http://blog.csdn.net/yeqishi/article/details/5491413" target="_blank" rel="external">devfs, sysfs, udev文件系统区别</a> 和 linux设备驱动开发详解（第二版） </p>
+<h3 id="一-devfs设备文件简略介绍(2-6版本以后内核都采用udev设备文件系统)">一.devfs设备文件简略介绍(2.6版本以后内核都采用udev设备文件系统)</h3>
+<p>devfs(设备文件系统)是由2.4内核引入的，具有如下优点： </p>
+<p>1.可以通过程序在设备初始化时在/dev目录下创建设备文件，卸载时将它删除。 </p>
+<p>2.设备驱动程序可以指定设备号,所有者,和权限位,用户空间可以修改所有者和权限位。 </p>
+<p>3.不再需要为设备驱动程序分配主设备号以及处理的次设备号，在程序可以直接给register_chrdev()传递0主设备号以动态获得可用的主设备号，并在devfs_register() 中指定次设备号。<br><a id="more"></a><br>在2.6内核以前一直使用的是 devfs，devfs挂载于/dev目录下，提供了一种类似于文件的方法来管理位于/dev目录下的所有设备，我们知道 /dev目录下的每一个文件都对应的是一个设备，至于当前该设备存在与否先且不论，而且这些特殊文件是位于根文件系统上的，在制作文件系统 的时候我们就已经建立了这些设备文件，因此通过操作这些特殊文件，可以实现与内核进行交互。但是devfs文件系统有一些缺点，例如：不确定的设备映射，有时一个设备映射的设备文件可能不同，例如我的U盘可能对应sda有可能对应sdb；没有足够的主/辅设备号，当设备过多的时候，显然这会成为一个问题；/dev目录下文件太多而且不能表示当前系统上的实际设备；命名不够灵活，不能任意指定等等。<br><br></p>
+<h3 id="二-sysfs">二.sysfs</h3>
+<p>从Fedora 2开始，在根目录下会有一个/sys目录，mount 看一下，这个目录挂装了一个sysfs的文件系统。 </p>
+<p>Linux 2.6 的内核引入了 sysfs 文件系统。sysfs 被看成是与 proc，devfs，和 devpty 同类别的文件系统。sysfs 把连接在系统上的设备和总线组织成为一个分级的文件，它们可以被从用户的空间存取到。这是被设计用来处理那些以前驻留在 /proc/ 的设备和驱动程序指定的选件以及用来处理那些以前由 devfs 提供支持的动态加载设备。在早期的 sysfs 实现中，一些驱动和应用仍然被当做老的 proc 条目。但是 sysfs 是未来的发展方向。 </p>
+<p>sysfs 被加载在 /sys/ 系统中。它所包括的目录可以使用不同的方式来治理连接在系统上的设备。/sysfs/ 中的子目录包括： </p>
+<p>/devices/ 目录这个目录包括 /css0/。它的子目录代表了所有被 Linux 内核检测到的子通道。子通道目录的命名格式是 0.0.nnnn，其中的 nnnn 是子通道的十六进制代码 (0到ffff)。子通道目录包括状态文件和其他代表实际设备的设备子目录。设备目录的格式是：0.0.xxxx，其中的 xxxx 是这个设备的单元地址。/devices/ 还包括了状态信息和设备的配置选项。 </p>
+<p>/bus/ 目录这个目录包括了 /ccw/ 和 /ccwgroup/ 两个子目录。CCW 设备可以通过使用通道命令来存取。在 /ccw/ 目录中的设备只使用一个子通道。CCW 组设备也可以通过使用通道命令来存取，但是它们的每个设备使用多于一个的子通道。比如：一个3390-3 DASD 设备使用一个子通道，但是一个 OSA 适配器的 QDIO 网络连接使用三个子通道。/ccw/ 和 /ccwgroup/ 目录都包括设备目录和驱动器目录： </p>
+<p>/devices/ 目录包括了到 /sys/devices/css0/ 目录的设备目录的符号链接。/drivers 目录包括了所有由代表当前被系统加载的设备的驱动程序的目录。zFCP 驱动程序有一个目录在这里。/driver/ 目录包括了设备驱动程序的设置和它使用的符号链接 (/sys/devices/css0/ 目录)/class/ 目录/class/ 目录包括了代表由相似功能的设备组成的组 (ttys，SCSI 磁带驱动器，网络设备…)的目录。 </p>
+<p>/block/ 目录这个目录包括了系统中的每一个块设备的目录。块设备主要是磁盘类的设备，例如 DASD，回送设备，以及软件磁盘冗余阵列设备。一个与老版本 Linux 不同的是，使用 sysfs 系统的 Linux 需要使用设备在 sysfs 中的名字来指定设备。在一个 2.4 版本的内核映像中，zFCP 驱动程序是由它的设备地址来指定的。但是在 2.6 版本的内核映像中，它的驱动程序是由 0.0.1600 来指定的。<br><br></p>
+<h3 id="三-udev设备文件详细介绍">三.udev设备文件详细介绍</h3>
+<p>   devfs 存在的主要的问题是它处理设备检测、创建和命名的方式，其中设备节点的命名可能是最严重的问题。一般可接受的方式是，如果设备名是可配置的，那么设备命名策略应该由系统管理员决定，而不是由某些开发者强制规定。devfs 文件系统还存在竞争条件(race conditions)的问题，这是它天生的设计缺陷，不对内核做彻底的修改就无法修正这个问题。 </p>
+<p>   上篇文章简单介绍sysfs文件系统，您可能想知道 sysfs 是怎么认出系统中存在的设备以及应该使用什么设备号。对于已经编入内核的驱动程序，当被内核检测到的时候，会直接在 sysfs 中注册其对象；对于编译成模块的驱动程序，当模块载入的时候才会这样做。一旦挂载了 sysfs 文件系统(挂载到 /sys)，内建的驱动程序在 sysfs 注册的数据就可以被用户空间的进程使用，并提供给 udev 以创建设备节点。 </p>
+<p>   udev 初始化脚本负责在 Linux 启动的时候创建设备节点，该脚本首先将 /sbin/udevsend 注册为热插拔事件处理程序。热插拔事件(随后将讨论)本不应该在这个阶段发生，注册 udev 只是为了以防万一。然后 udevstart 遍历 /sys 文件系统，并在 /dev 目录下创建符合描述的设备。例如，/sys/class/tty/vcs/dev 里含有”7:0”字符串，udevstart 就根据这个字符串创建主设备号为 7 、次设备号为0 的 /dev/vcs 设备。udevstart 创建的每个设备的名字和权限由 /etc/udev/rules.d/ 目录下的文件指定的规则来设置。如果 udev 找不到所创建设备的权限文件，就将其权限设置为缺省的 660 ，所有者为 root:root 。 </p>
+<p>   上面的步骤完成后，那些已经存在并且已经内建驱动的设备就可以使用了，那么以模块驱动的设备呢？ </p>
+<p>   前面我们提到了”热插拔事件处理程序”的概念，当内核检测到一个新设备连接时，内核会产生一个热插拔事件， </p>
+<p>   并在 /proc/sys/kernel/hotplug 文件里查找处理设备连接的用户空间程序。udev 初始化脚本将 udevsend 注册为该处理程序。 </p>
+<p>   当产生热插拔事件的时候，内核让 udev 在 /sys 文件系统里检测与新设备的有关信息，并为新设备在 /dev 里创建项目。 </p>
+<p>   大多数 Linux 发行版通过 /etc/modules.conf 配置文件来处理模块加载，对某个设备节点的访问导致相应的内核模块被加载。对 udev 这个方法就行不通了，因为在模块加载前，设备节点根本不存在。为了解决这个问题，在 LFS-Bootscripts 软件包里加入了 modules 启动脚本，以及 /etc/sysconfig/modules 文件。通过在 modules 文件里添加模块名，就可以在系统启动的时候加载这些模块，这样 udev 就可以检测到设备，并创建相应的设备节点了。如果插入的设备有一个驱动程序模块但是尚未加载，Hotplug 软件包就有用了，它就会响应上述的内核总线驱动热插拔事件并加载相应的模块，为其创建设备节点，这样设备就可以使用了。 </p>
+<p>   udev是一种工具，它能够根据系统中的硬件设备的状况动态更新设备文件，包括设备文件的创建，删除等。设备文件通常放在/dev目录下，使用udev 后,在/dev下面只包含系统中真实存在的设备。它于硬件平台无关的，位于用户空间，需要内核sysfs和tmpfs的支持，sysfs为udev提供设备入口和uevent通道，tmpfs为udev设备文件提供存放空间。 </p>
+<p>   显而易见<code>udev设备文件的优点</code>： </p>
+<p>   1.udev完全在用户态工作，利用设备加入或移除时内核所发送的热插拔事件。在热插拔时，设备的详细信息会由内核输出到位于/sys的sysfs文件系统。udev的设备命名策略权限控制都在用户态完成的，它利用sysfs信息来进行创建设备文件节点。 </p>
+<p>   2.udev根据系统中的硬件设备的状态动态更新设备文件，进行设备文件的创建和删除等。 </p>
+<p>   注：使用udev,/dev目录下就会只包含系统中真正存在的设备。 </p>
+<p>   注：所有在 sysfs 中显示的设备都可以由 udev 来创建节点。如果内核中增加了其它设备的支持， </p>
+<p>   udev 也就自动地可以为它们工作了。在init初始化之前，udev 可以被放入 initramfs 之中，并在每个设备被发现的时候运行。 </p>
+<p>   也可以让udev 工作在一个真的根分区被加载之后根据 /sys 的内容创建的初始 /dev 目录之中<br><br></p>
+<h3 id="四-udev和devfs设备文件的对比">四.udev和devfs设备文件的对比</h3>
+<p>1.udev能够实现所有devfs实现的功能。但udev运行在用户模式中，而devfs运行在内核中。 </p>
+<p>2.当一个并不存在的 /dev 节点被打开的时候， devfs一样自动加载驱动程序而udev确不能。 </p>
+<p>  udev设计时，是在设备被发现的时候加载模块，而不是当它被访问的时候。 </p>
+<p>  devfs这个功能对于一个配置正确的计算机是多余的。系统中所有的设备都应该产生 </p>
+<p>  hotplug 事件、加载恰当的驱动，而 udev 将会注意到这点并且为它创建对应的 </p>
+<p>  设备节点。如果你不想让所有的设备驱动停留在内存之中，应该使用其它东西来 </p>
+<p>  管理你的模块 (如脚本, modules.conf, 等等) 。 </p>
+<p>  其中devfs 用的方法导致了大量无用的 modprobe 尝试，以此程序探测设备是否存在。 </p>
+<p>  每个试探性探测都新建一个运行 modprobe 的进程，而几乎所有这些都是无用的。 </p>
+<p>3.udev是通过对内核产生的设备名增加别名的方式来达到上述目的的。前面说过，udev是用户模式程序，不会更改内核的行为。 </p>
+<p>因此，内核依然会我行我素地产生设备名如sda,sdb等。但是，udev可以根据设备的其他信息如总线（bus），生产商（vendor）等 </p>
+<p>不同来区分不同的设备，并产生设备文件。udev只要为这个设备文件取一个固定的文件名就可以解决这个问题。在后续对设备的操作中， </p>
+<p>只要引用新的设备名就可以了。但为了保证最大限度的兼容，一般来说， </p>
+<p>新设备名总是作为一个对内核自动产生的设备名的符号链接（link）来使用的。 </p>
+<p><strong>例如</strong>：内核产生了sda设备名，而根据信息，这个设备对应于是我的内置硬盘，那我就可以制定udev规则，让udev除了产生/dev/sda设备文件外，另外创建一个符号链接叫/dev/internalHD。这样，我在fstab文件中，就可以用/dev/internalHD来代替原来的 /dev/sda了。下次，由于某些原因，这个硬盘在内核中变成了sdb设备名了，那也不用着急，udev还会自动产生/dev/internalHD这个链接，并指向正确的/dev/sdb设备。所有其他的文件像fstab等都不用修改。 </p>
+<p>而在在2.6内核以前一直使用的是 devfs，devfs挂载于/dev目录下，提供了一种类似于文件的方法来管理位于/dev目录下的所有设备，但是devfs文件系统有一些缺点，例如：不确定的设备映射，有时一个设备映射的设备文件可能不同，例如我的U盘可能对应sda有可能对应sdb 。 </p>
+<p>注：可以用命令查看其中的信息，    udevinfo -a -p /sys/block/sda </p>
+<p>在此之前的设备文件管理方法（静态文件和devfs）有几个缺点： </p>
+<p><strong> 不确定的设备映射。</strong>特别是那些动态设备，比如USB设备，设备文件到实际设备的映射并不可靠和确定。举一个例子：如果你有两个USB打印机。一个可能称为 /dev/usb/lp0,另外一个便是/dev/usb/lp1。但是到底哪个是哪个并不清楚，lp0,lp1和实际的设备没有一一对应的关系，因为他可能因为发现设备的顺序，打印机本身关闭等原因而导致这种映射并不确定。理想的方式应该是：两个打印机应该采用基于他们的序列号或者其他标识信息的唯一设备文件来映射。但是静态文件和devfs都无法做到这点。 </p>
+<p><strong>没有足够的主/辅设备号。</strong>我们知道，每一个设备文件是有两个8位的数字：一个是主设备号 ，另外一个是辅设备号来分配的。这两个8位的数字加上设备类型（块设备或者字符设备）来唯一标识一个设备。不幸的是，关联这些身边的的数字并不足够。 </p>
+<p><strong>/dev目录下文件太多。</strong>一个系统采用静态设备文件关联的方式，那么这个目录下的文件必然是足够多。而同时你又不知道在你的系统上到底有那些设备文件是激活的。 </p>
+<p><strong>命名不够灵活。</strong>尽管devfs解决了以前的一些问题，但是它自身又带来了一些问题。其中一个就是命名不够灵活；你别想非常简单的就能修改设备文件的名字。缺省的devfs命令机制本身也很奇怪，他需要修改大量的配置文件和程序。; </p>
+<p><strong>内核内存使用</strong>，devfs特有的另外一个问题是，作为内核驱动模块，devfs需要消耗大量的内存，特别当系统上有大量的设备时（比如上面我们提到的系统一个上有好几千磁盘时） </p>
+<p>udev的目标是想解决上面提到的这些问题，他通采用用户空间(user-space)工具来管理/dev/目录树，他和文件系统分开。知道如何改变缺省配置能让你如何定制自己的系统，比如创建设备字符连接，改变设备文件属组，权限等。 </p>
 ]]></content>
          
          
